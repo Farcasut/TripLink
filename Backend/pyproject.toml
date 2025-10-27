@@ -1,0 +1,20 @@
+[project]
+name = "triplink-backend"
+version = "0.1.0"
+description = "TripLink Flask backend."
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.17.0",
+    "flask>=3.1.2",
+    "mysql-connector-python>=9.5.0",
+    "pydantic>=2.12.3",
+    "sqlalchemy>=2.0.44",
+    "stripe>=13.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.9.0",
+    "isort>=7.0.0",
+    "pytest>=8.4.2",
+]
