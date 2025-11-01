@@ -1,13 +1,13 @@
 version: "3.9"
 services:
   db:
-    container_name: linkTripDB
+    container_name: tripLinkDB
     image: postgres:latest
     restart: always
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: linkTripDB
+      POSTGRES_DB: tripLinkDB
     ports:
       - "5432:5432"
     volumes:
