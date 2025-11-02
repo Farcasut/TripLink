@@ -1,7 +1,7 @@
 services:
   db:
     container_name: tripLinkDB
-    image: postgres:latest
+    image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
