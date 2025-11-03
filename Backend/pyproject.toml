@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "alembic>=1.17.0",
     "flask>=3.1.2",
+    "flask-jwt-extended>=4.7.1",
     "flask-sqlalchemy>=3.0.5",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.3",

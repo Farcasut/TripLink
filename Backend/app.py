@@ -1,14 +1,15 @@
 import os
-import sys
 from typing import Final
 from flask import Flask
 from dotenv import load_dotenv
+from flask_jwt_extended import JWTManager
+
 from database import db
 import models.User
 import argparse
+from blueprints.userAccess import user_access
 
 load_dotenv()
-
 
 
 def create_app():
@@ -22,17 +23,23 @@ def create_app():
     f"postgresql://{postgres_user}:{postgres_password}"
     f"@{postgres_host}:{postgres_port}/{postgres_db_name}"
   )
+  app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-  return  app
+  app.register_blueprint(user_access)
+  jwt = JWTManager(app)
+  return app
+
 
 def setup_db(app: Final[Flask], reset_db: bool = False):
-    db.init_app(app)
-    with app.app_context():
-        if reset_db:
-            db.drop_all()
-            print("Dropped all tables.")
-        db.create_all()
-        print("Created all tables.")
+  db.init_app(app)
+
+  with app.app_context():
+    if reset_db:
+      print("Dropped all tables.")
+      db.drop_all()
+    db.create_all()
+    print("Created all tables.")
+
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run the Flask app.")

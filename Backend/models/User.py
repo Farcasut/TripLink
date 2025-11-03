@@ -1,18 +1,19 @@
 from database import db
 
+
 class User(db.Model):
-
   __tablename__ = "users"
-  id:int = db.Column(db.Integer, primary_key=True)
-  username:str = db.Column(db.String(16), unique=True, nullable=False)
-  email:str = db.Column(db.String(120), unique=True, nullable=False)
-  last_name: str = db.Column(db.String(32), unique=True, nullable=False)
-  first_name: str = db.Column(db.String(32), unique=True, nullable=False)
-
+  id: int = db.Column(db.Integer, primary_key=True)
+  role: int = db.Column(db.Integer, nullable=False)
+  username: str = db.Column(db.String(16), unique=True, nullable=False)
+  password: str = db.Column(db.String(120), unique=True, nullable=False)
+  email: str = db.Column(db.String(120), unique=True, nullable=False)
+  last_name: str = db.Column(db.String(32), unique=False, nullable=False)
+  first_name: str = db.Column(db.String(32), unique=False, nullable=False)
 
   def to_dict(self):
     return {
-      "id" : self.id,
+      "id": self.id,
       "username": self.username,
       "email": self.email,
       "last_name": self.last_name,
@@ -21,3 +22,9 @@ class User(db.Model):
 
   def __repr__(self):
     return f"<User {self.username}>"
+
+  def get_identy(self):
+    return {
+      "username": self.username,
+      "role": self.role
+    }
