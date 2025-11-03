@@ -13,7 +13,7 @@ load_dotenv()
 
 
 def create_app():
-  app: Final[Flask] = Flask(__name__)
+  app: Flask = Flask(__name__)
   postgres_user = os.getenv("POSTGRES_USER", "admin")
   postgres_password = os.getenv("POSTGRES_PASSWORD", "password")
   postgres_db_name = os.getenv("POSTGRES_DB", "tripLinkDB")
@@ -30,7 +30,7 @@ def create_app():
   return app
 
 
-def setup_db(app: Final[Flask], reset_db: bool = False):
+def setup_db(app: Flask, reset_db: bool = False):
   db.init_app(app)
 
   with app.app_context():

@@ -23,7 +23,7 @@ class User(db.Model):
   def __repr__(self):
     return f"<User {self.username}>"
 
-  def get_identy(self):
+  def get_identity(self):
     return {
       "username": self.username,
       "role": self.role

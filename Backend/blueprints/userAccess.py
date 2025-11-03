@@ -1,6 +1,7 @@
 import hashlib
 from datetime import timedelta
 
+from sqlalchemy import or_
 from flask import Blueprint, render_template, abort, request, jsonify
 from jinja2 import TemplateNotFound
 import re
@@ -23,7 +24,9 @@ def is_email_valid(email: str) -> bool:
 
 
 def user_exists(email: str, username: str) -> bool:
-  return User.query.filter_by(email=email, username=username).first() is not None
+  return User.query.filter(
+    or_(User.email == email, User.username == username)
+  ).first() is not None
 
 
 @user_access.post("/register")
@@ -31,13 +34,13 @@ def register():
   try:
     data = request.get_json()
     data["password"] = hashlib.sha256(data["password"].encode()).hexdigest()
-    user = User(**data)
+    user: User = User(**data)
     exception_raiser(not is_email_valid(user.email), "error", "Invalid email", 400)
     exception_raiser(user_exists(user.email, user.username), "error", "Email already exists", 400)
     user.role = 1
     db.session.add(user)
     db.session.commit()
-    token = create_access_token(identity=user.get_identy(), expires_delta=timedelta(days=1))
+    token = create_access_token(identity=user.get_identity(), expires_delta=timedelta(days=1))
     return jsonify({"status": "success", "message": "User registered", "content": token}), 201
   except CustomHttpException as e:
     return jsonify({'status': e.status, "message": str(e)}), e.status_code
@@ -53,19 +56,15 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    exception_raiser(username and password, "error", "Username and password required", 400)
+    exception_raiser( not (username and password), "error", "Username and password required", 400)
     user = User.query.filter_by(username=username).first()
-    exception_raiser(user is not None, "error", "Invalid username or password", 401)
+    exception_raiser(user is None, "error", "Invalid username or password", 401)
 
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
-    exception_raiser(user.password == hashed_password, "error", "Invalid username or password", 401)
+    exception_raiser(user.password != hashed_password, "error", "Invalid username or password", 401)
 
     token = create_access_token(identity=user.get_identity(), expires_delta=timedelta(days=1))
-    print(token)
-    return 200
-
-
-
+    return jsonify({"status": "success", "message": "User logged", "content": token}), 200
   except CustomHttpException as e:
     return jsonify({'status': e.status, "message": str(e)}), e.status_code
   except Exception as e:
