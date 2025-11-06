@@ -14,11 +14,11 @@ load_dotenv()
 
 def create_app():
   app: Flask = Flask(__name__)
-  postgres_user = os.getenv("POSTGRES_USER", "admin")
-  postgres_password = os.getenv("POSTGRES_PASSWORD", "password")
-  postgres_db_name = os.getenv("POSTGRES_DB", "tripLinkDB")
-  postgres_host = os.getenv("POSTGRES_HOST", "localhost")
-  postgres_port = os.getenv("POSTGRES_PORT", "5432")
+  postgres_user = os.getenv("POSTGRES_USER",)
+  postgres_password = os.getenv("POSTGRES_PASSWORD")
+  postgres_db_name = os.getenv("POSTGRES_DB")
+  postgres_host = os.getenv("POSTGRES_HOST")
+  postgres_port = os.getenv("POSTGRES_PORT")
   app.config['SQLALCHEMY_DATABASE_URI'] = (
     f"postgresql://{postgres_user}:{postgres_password}"
     f"@{postgres_host}:{postgres_port}/{postgres_db_name}"
@@ -47,6 +47,6 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   app = create_app()
-  setup_db(app)
+  setup_db(app, args.reset_db)
   print("Registered tables:", db.Model.metadata.tables.keys())
   app.run(host="0.0.0.0", port=5000, debug=True)

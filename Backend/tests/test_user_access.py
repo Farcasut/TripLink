@@ -2,6 +2,7 @@ import hashlib
 
 import pytest
 
+from blueprints.UserRoles import UserRoles
 from models.User import User
 from database import db
 
@@ -15,14 +16,14 @@ def hash_pw(password: str) -> str:
 # -----------------
 
 @pytest.mark.order(1)
-def test_register_success(client, app):
+def test_register_success(client, mock_app):
     data = {
         "username": "testuser",
         "email": "test@example.com",
         "password": "mypassword",
         "first_name": "Test",
         "last_name": "User",
-        "role": 1
+        "role": UserRoles.DEFAULT.value
     }
     response = client.post("/register", json=data)
     assert response.status_code == 201
@@ -31,13 +32,13 @@ def test_register_success(client, app):
     assert body["status"] == "success"
     assert "content" in body  # token included
 
-    with app.app_context():
+    with mock_app.app_context():
         user = User.query.filter_by(username="testuser").first()
         assert user is not None
         assert user.email == "test@example.com"
         assert user.first_name == "Test"
         assert user.last_name == "User"
-        assert user.role == 1
+        assert user.role == UserRoles.DEFAULT.value
 
 @pytest.mark.order(2)
 def test_register_invalid_email(client):
@@ -47,7 +48,7 @@ def test_register_invalid_email(client):
         "password": "pw",
         "first_name": "Bad",
         "last_name": "Email",
-        "role": 1
+        "role": UserRoles.DEFAULT.value
     }
     response = client.post("/register", json=data)
     body = response.get_json()
@@ -57,14 +58,14 @@ def test_register_invalid_email(client):
     assert "Invalid email" in body["message"]
 
 @pytest.mark.order(3)
-def test_register_duplicate_user(client, app):
+def test_register_duplicate_user(client, mock_app):
     # Add user directly to DB first
-    with app.app_context():
+    with mock_app.app_context():
         user: User = User(
             username="duplicate",
             email="dup@example.com",
             password=hash_pw("pw"),
-            role=1,
+            role=UserRoles.DEFAULT.value,
             first_name="Dup",
             last_name="User"
         )
@@ -91,13 +92,13 @@ def test_register_duplicate_user(client, app):
 # Login tests
 # -----------------
 @pytest.mark.order(4)
-def test_login_success(client, app):
-    with app.app_context():
+def test_login_success(client, mock_app):
+    with mock_app.app_context():
         user: User = User(
             username="loginuser",
             email="login@example.com",
             password=hash_pw("secret"),
-            role=1,
+            role=UserRoles.DEFAULT.value,
             first_name="Login",
             last_name="User"
         )
@@ -110,13 +111,13 @@ def test_login_success(client, app):
     assert response.status_code == 200
 
 @pytest.mark.order(5)
-def test_login_wrong_password(client, app):
-    with app.app_context():
+def test_login_wrong_password(client, mock_app):
+    with mock_app.app_context():
         user: User = User(
             username="wrongpw",
             email="wrong@example.com",
             password=hash_pw("rightpassword"),
-            role=1,
+            role=UserRoles.DEFAULT.value,
             first_name="Wrong",
             last_name="Password"
         )

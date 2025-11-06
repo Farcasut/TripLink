@@ -2,7 +2,7 @@ from database import db
 
 
 class User(db.Model):
-  __tablename__ = "users"
+  __tablename__ = "user"
   id: int = db.Column(db.Integer, primary_key=True)
   role: int = db.Column(db.Integer, nullable=False)
   username: str = db.Column(db.String(16), unique=True, nullable=False)

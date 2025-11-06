@@ -6,7 +6,7 @@ from blueprints.userAccess import user_access
 from database import db
 
 @pytest.fixture()
-def app():
+def mock_app():
     app = Flask(__name__)
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -25,6 +25,6 @@ def app():
 
 
 @pytest.fixture()
-def client(app):
+def client(mock_app):
     """Provides a test client for making requests."""
-    return app.test_client()
+    return mock_app.test_client()
