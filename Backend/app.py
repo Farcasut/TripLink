@@ -23,7 +23,7 @@ def create_app():
     f"postgresql://{postgres_user}:{postgres_password}"
     f"@{postgres_host}:{postgres_port}/{postgres_db_name}"
   )
-  app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "super-secret")
+  app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET")
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
   app.register_blueprint(user_access)
   jwt = JWTManager(app)
@@ -49,4 +49,4 @@ if __name__ == "__main__":
   app = create_app()
   setup_db(app, args.reset_db)
   print("Registered tables:", db.Model.metadata.tables.keys())
-  app.run(host="0.0.0.0", port=5000, debug=True)
+  app.run(host=os.getenv("host"), port=int(os.getenv("port")), debug=True)
