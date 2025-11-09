@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Triplink - Login</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+        <div class="bg-gray-800/70 backdrop-blur-lg p-10 rounded-2xl shadow-xl w-full max-w-md border border-gray-700">
+            <h1 class="text-3xl font-bold mb-6 text-center">Welcome!</h1>
+            <p class="text-gray-400 text-center mb-8">Login to find your trip</p>
+
+            <div id="errorMessage" class="hidden p-3 mb-4 rounded text-sm"></div>
+            
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-gray-300 mb-1">User Name</label>
+                    <input type="text" name="username" required
+                        class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-gray-300 mb-1">Password</label>
+                    <input type="password" name="password" required
+                        class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <button type="submit"
+                    class="w-full py-2 bg-blue-600 hover:bg-blue-700 transition rounded-lg font-semibold text-white">
+                    Login
+                </button>
+            </form>
+
+            <p class="text-gray-400 text-center mt-6 text-sm">
+                Don't have an account?
+                <a href="/register" class="text-blue-400 hover:underline">Sign up</a>
+            </p>
+        </div>
+
+        <script>
+            const message = document.getElementById("errorMessage");
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const username = e.target.username.value;
+                const password = e.target.password.value;
+
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        username, password
+                    })
+                });
+
+                const result = await response.json();
+                message.textContent = result.message;
+                message.classList.remove('hidden');
+                if (result.status == 'success') {
+                    message.classList.remove('bg-red-500', 'text-red-100');
+                    message.classList.add('bg-green-500', 'text-white');
+                    window.location.href = '/dashboard';
+                } else {
+                    message.classList.remove('bg-green-500', 'text-white');
+                    message.classList.add('bg-red-500', 'text-red-100');
+                }
+            });
+        </script>
+    </body>
+</html>
