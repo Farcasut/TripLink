@@ -25,6 +25,7 @@ class User(db.Model):
 
   def get_identity(self):
     return {
+      "id": self.id,
       "username": self.username,
       "role": self.role
     }

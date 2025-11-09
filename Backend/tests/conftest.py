@@ -3,6 +3,7 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 
 from blueprints.userAccess import user_access
+from blueprints.Rides import rides
 from database import db
 
 @pytest.fixture()
@@ -16,6 +17,7 @@ def mock_app():
     # Initialize and register everything
     db.init_app(app)
     app.register_blueprint(user_access)
+    app.register_blueprint(rides)
 
     # Create and tear down database per test session
     with app.app_context():
