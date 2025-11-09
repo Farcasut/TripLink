@@ -6,7 +6,7 @@ ride_passengers = db.Table(
   db.Column("user_id", db.Integer, db.ForeignKey("user.id"), primary_key=True)
 )
 
-class RiderOffer(db.Model):
+class RideOffer(db.Model):
   __tablename__ = "ride_offer"
   id: int = db.Column(db.Integer, primary_key=True)
   author_id: int = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
