@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from database import db
 from blueprints.UserRoles import UserRoles
-from models.RideOffer import RiderOffer
+from models.RideOffer import RideOffer
 import time
 from CustomHttpException import CustomHttpException
 from CustomHttpException import exception_raiser
@@ -37,7 +37,7 @@ def create_ride():
     user_id = jwt_map.get("id")
     user_role = jwt_map.get("role")
     exception_raiser(user_role != UserRoles.DRIVER.value, "error", "You must be a driver to create a ride.", 403)
-    ride: RiderOffer = RiderOffer(**request.get_json())
+    ride: RideOffer = RideOffer(**request.get_json())
     ride.author_id = user_id
     db.session.add(ride)
     db.session.commit()
@@ -56,7 +56,7 @@ def get_ride(ride_id):
     Retrieve a single ride offer by its ID.
     """
     try:
-        ride = RiderOffer.query.get(ride_id)
+        ride = RideOffer.query.get(ride_id)
         exception_raiser(ride is None, "error", "Ride not found.", 404)
 
         return jsonify({

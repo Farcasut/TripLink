@@ -2,7 +2,7 @@ import json
 import pytest
 from flask_jwt_extended import create_access_token
 from database import db
-from models.RideOffer import RiderOffer
+from models.RideOffer import RideOffer
 from blueprints.UserRoles import UserRoles
 
 
@@ -44,8 +44,8 @@ def test_create_ride_forbidden_for_passenger(client, passenger_token):
 
 def test_get_ride(client, driver_token):
   with client.application.app_context():
-    ride = RiderOffer(author_id=1, source="City A", destination="City B", departure_date=1700000000, price=50,
-                      available_seats=3)
+    ride = RideOffer(author_id=1, source="City A", destination="City B", departure_date=1700000000, price=50,
+                     available_seats=3)
     db.session.add(ride)
     db.session.commit()
     ride_id = ride.id
