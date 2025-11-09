@@ -4,10 +4,13 @@ from flask import Flask
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 
+import blueprints.Rides
 from database import db
 import models.User
+import models.RideOffer
 import argparse
 from blueprints.userAccess import user_access
+from blueprints.Rides import rides
 
 load_dotenv()
 
@@ -26,6 +29,7 @@ def create_app():
   app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET")
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
   app.register_blueprint(user_access)
+  app.register_blueprint(rides)
   jwt = JWTManager(app)
   return app
 
