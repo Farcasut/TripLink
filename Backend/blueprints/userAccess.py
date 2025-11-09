@@ -2,16 +2,22 @@ import hashlib
 from datetime import timedelta
 
 from sqlalchemy import or_
-from flask import Blueprint, render_template, abort, request, jsonify
+from flask import Blueprint, render_template, abort, request, jsonify, redirect
 from jinja2 import TemplateNotFound
+import jwt
 import re
 
 from blueprints.UserRoles import UserRoles
 from models.User import User
 from CustomHttpException import CustomHttpException
 from CustomHttpException import exception_raiser
+from CustomJWTRequired import jwt_noapi_required
 from database import db
-from flask_jwt_extended import create_access_token, current_user, get_jwt_identity
+from flask_jwt_extended import (
+    create_access_token, get_jwt_identity,
+    jwt_required, verify_jwt_in_request,
+    set_access_cookies, unset_jwt_cookies
+)
 
 user_access = Blueprint("user_access", __name__)
 
@@ -80,8 +86,7 @@ def register():
     user.role = UserRoles.DEFAULT.value
     db.session.add(user)
     db.session.commit()
-    token = create_access_token(identity=user.get_identity(), expires_delta=timedelta(days=1))
-    return jsonify({"status": "success", "message": "User registered", "content": token}), 201
+    return jsonify({"status": "success", "message": "User registered"}), 201
   except CustomHttpException as e:
     return jsonify({'status': e.status, "message": str(e)}), e.status_code
   except Exception as e:
@@ -121,10 +126,67 @@ def login():
 
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
     exception_raiser(user.password != hashed_password, "error", "Invalid username or password", 401)
-
-    token = create_access_token(identity=user.get_identity(), expires_delta=timedelta(days=1))
-    return jsonify({"status": "success", "message": "User logged", "content": token}), 200
+    token = create_access_token(identity=str(user.id), expires_delta=timedelta(days=1))
+    response = jsonify({"status": "success", "message": "User logged", "content": token})
+    set_access_cookies(response, token)
+    return response, 200
   except CustomHttpException as e:
     return jsonify({'status': e.status, "message": str(e)}), e.status_code
   except Exception as e:
     return jsonify({"status": "error", "message": str(e)}), 400
+
+@user_access.get("/login")
+def login_page():
+    '''
+      Simple login page form.
+    '''
+
+    try:
+        return render_template('login.html')
+    except TemplateNotFound:
+        abort(404)
+
+@user_access.get("/register")
+def register_page():
+    '''
+      Simple register page form.
+    '''
+    
+    try:
+        return render_template('register.html')
+    except TemplateNotFound:
+        abort(404)
+
+@user_access.route("/")
+def user_index():
+    '''
+      Index router.
+    '''
+    
+    try:
+        verify_jwt_in_request()
+        return redirect("/dashboard")
+    except:
+        return redirect("/login")
+
+@user_access.route("/dashboard")
+@jwt_noapi_required
+def user_dashboard():
+    '''
+      Dashboard page.
+    '''
+
+    user_id = get_jwt_identity()
+    user: User = User.query.get(int(user_id))
+    
+    try:
+        return render_template('dashboard.html', user = user)
+    except TemplateNotFound:
+        abort(404)
+
+@user_access.route('/logout')
+@jwt_noapi_required
+def user_logout():
+    response = redirect("/login")
+    unset_jwt_cookies(response)
+    return response

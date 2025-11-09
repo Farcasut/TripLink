@@ -4,13 +4,12 @@ from flask import Flask
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 
+from blueprints.userAccess import user_access
 from database import db
 import models.User
 import argparse
-from blueprints.userAccess import user_access
 
 load_dotenv()
-
 
 def create_app():
   app: Flask = Flask(__name__)
@@ -23,12 +22,14 @@ def create_app():
     f"postgresql://{postgres_user}:{postgres_password}"
     f"@{postgres_host}:{postgres_port}/{postgres_db_name}"
   )
+  
   app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET")
+  app.config['JWT_TOKEN_LOCATION'] = ['cookies']
+  app.config['JWT_COOKIE_SECURE'] = False
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
   app.register_blueprint(user_access)
   jwt = JWTManager(app)
   return app
-
 
 def setup_db(app: Flask, reset_db: bool = False):
   db.init_app(app)
@@ -39,7 +40,6 @@ def setup_db(app: Flask, reset_db: bool = False):
       db.drop_all()
     db.create_all()
     print("Created all tables.")
-
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run the Flask app.")
