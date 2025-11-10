@@ -209,10 +209,60 @@ def user_profile():
             user.first_name = data.get("first_name", user.first_name)
             user.last_name = data.get("last_name", user.last_name)
             user.email = data.get("email", user.email)
-            
-            # If password is provided, hash and update it
+
+            # Handle password change
+            current_password = data.get("current_password")
             new_password = data.get("password")
-            if new_password:
+            confirm_password = data.get("confirm_password")
+            
+            # If user wants to change password
+            if new_password or confirm_password or current_password:
+                # All three fields must be provided
+                exception_raiser(
+                    not current_password, 
+                    "error", 
+                    "Current password is required to change password", 
+                    400
+                )
+                exception_raiser(
+                    not new_password, 
+                    "error", 
+                    "New password is required", 
+                    400
+                )
+                exception_raiser(
+                    not confirm_password, 
+                    "error", 
+                    "Password confirmation is required", 
+                    400
+                )
+                
+                # Verify current password
+                hashed_current = hashlib.sha256(current_password.encode()).hexdigest()
+                exception_raiser(
+                    user.password != hashed_current,
+                    "error",
+                    "Current password is incorrect",
+                    401
+                )
+                
+                # Check if new passwords match
+                exception_raiser(
+                    new_password != confirm_password,
+                    "error",
+                    "New passwords do not match",
+                    400
+                )
+                
+                # Check if new password is different from current
+                exception_raiser(
+                    new_password == current_password,
+                    "error",
+                    "New password must be different from current password",
+                    400
+                )
+                
+                # Update password
                 user.password = hashlib.sha256(new_password.encode()).hexdigest()
             
             # Validate email format
