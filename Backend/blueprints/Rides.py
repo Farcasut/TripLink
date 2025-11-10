@@ -90,18 +90,6 @@ def book_ride(ride_id):
 
         ride = RideOffer.query.get(ride_id)
         exception_raiser(ride is None, "error", "Ride not found.", 404)
-<<<<<<< HEAD
-
-        if ride.available_seats <= 0:
-            return jsonify({"status": "error", "message": "No seats available"}), 400
-
-        from models.User import User
-        user = User.query.get(user_id)
-        if not user:
-            return jsonify({"status": "error", "message": "User not found"}), 404
-        if user in ride.passengers:
-            return jsonify({"status": "error", "message": "You already booked this ride"}), 400
-=======
         exception_raiser(ride.available_seats <= 0, "error", "No seats available", 400)
 
 
@@ -109,7 +97,6 @@ def book_ride(ride_id):
         exception_raiser(not user, "error", "User not found", 404)
         exception_raiser(user in ride.passengers, "error", "You already booked this ride", 400)
 
->>>>>>> 9b45b29 (Corrected some problems)
 
         ride.passengers.append(user)
         ride.available_seats -= 1
@@ -130,21 +117,6 @@ def book_ride(ride_id):
 @rides.delete("/book/<int:ride_id>")
 @jwt_required()
 def cancel_booking(ride_id):
-<<<<<<< HEAD
-    jwt_map = get_jwt()
-    user_id = jwt_map.get("id")
-    ride = RideOffer.query.get(ride_id)
-    if not ride:
-        return jsonify({"status": "error", "message": "Ride not found"}), 404
-    from models.User import User
-    user = User.query.get(user_id)
-    if user not in ride.passengers:
-        return jsonify({"status": "error", "message": "You have not booked this ride"}), 400
-    ride.passengers.remove(user)
-    ride.available_seats += 1
-    db.session.commit()
-    return jsonify({"status": "success", "message": "Booking canceled"}), 200
-=======
     try:
         jwt_map = get_jwt()
         user_id = jwt_map.get("id")
@@ -168,7 +140,6 @@ def cancel_booking(ride_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 400
->>>>>>> 9b45b29 (Corrected some problems)
 
 
 
