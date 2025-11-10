@@ -11,12 +11,14 @@ import models.User
 import models.RideOffer
 import argparse
 from blueprints.userAccess import user_access
+from blueprints.UserProfile import user_profile
 from blueprints.Rides import rides
 
 load_dotenv()
 
 def create_app():
   app: Flask = Flask(__name__)
+  
   postgres_user = os.getenv("POSTGRES_USER",)
   postgres_password = os.getenv("POSTGRES_PASSWORD")
   postgres_db_name = os.getenv("POSTGRES_DB")
@@ -31,9 +33,13 @@ def create_app():
   app.config['JWT_TOKEN_LOCATION'] = ['cookies']
   app.config['JWT_COOKIE_SECURE'] = False
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+  app.config["JWT_COOKIE_CSRF_PROTECT"] = False
   app.register_blueprint(user_access)
+  app.register_blueprint(user_profile)
   app.register_blueprint(rides)
+
   jwt = JWTManager(app)
+
   return app
 
 def setup_db(app: Flask, reset_db: bool = False):

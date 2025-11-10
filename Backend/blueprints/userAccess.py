@@ -16,7 +16,8 @@ from database import db
 from flask_jwt_extended import (
     create_access_token, get_jwt_identity,
     jwt_required, verify_jwt_in_request,
-    set_access_cookies, unset_jwt_cookies
+    set_access_cookies, unset_jwt_cookies,
+    get_csrf_token
 )
 
 user_access = Blueprint("user_access", __name__)
