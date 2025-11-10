@@ -6,6 +6,7 @@ from flask_jwt_extended import JWTManager
 
 import blueprints.Rides
 from blueprints.userAccess import user_access
+from blueprints.driver_access import driver_access
 from database import db
 import models.User
 import models.RideOffer
@@ -33,6 +34,7 @@ def create_app():
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
   app.register_blueprint(user_access)
   app.register_blueprint(rides)
+  app.register_blueprint(driver_access)
   jwt = JWTManager(app)
   return app
 
