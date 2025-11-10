@@ -16,7 +16,8 @@ from database import db
 from flask_jwt_extended import (
     create_access_token, get_jwt_identity,
     jwt_required, verify_jwt_in_request,
-    set_access_cookies, unset_jwt_cookies
+    set_access_cookies, unset_jwt_cookies,
+    get_csrf_token
 )
 
 user_access = Blueprint("user_access", __name__)
@@ -190,3 +191,62 @@ def user_logout():
     response = redirect("/login")
     unset_jwt_cookies(response)
     return response
+
+@user_access.route("/profile", methods=["GET", "POST"])
+@jwt_noapi_required
+def user_profile():
+    """
+    User profile page and update functionality.
+    """
+    user_id = get_jwt_identity()
+    user: User = User.query.get(int(user_id))
+    
+    if request.method == "POST":
+        try:
+            data = request.form
+            
+            # Update user fields
+            user.first_name = data.get("first_name", user.first_name)
+            user.last_name = data.get("last_name", user.last_name)
+            user.email = data.get("email", user.email)
+            
+            # If password is provided, hash and update it
+            new_password = data.get("password")
+            if new_password:
+                user.password = hashlib.sha256(new_password.encode()).hexdigest()
+            
+            # Validate email format
+            exception_raiser(not is_email_valid(user.email), "error", "Invalid email format", 400)
+            
+            # Check if email already exists (excluding current user)
+            existing_user = User.query.filter(
+                User.email == user.email, 
+                User.id != user.id
+            ).first()
+            exception_raiser(existing_user is not None, "error", "Email already exists", 400)
+            
+            db.session.commit()
+            
+            return render_template('profile.html', 
+                                 user=user, 
+                                 message="Profile updated successfully!",
+                                 message_type="success")
+                                 
+        except CustomHttpException as e:
+            db.session.rollback()
+            return render_template('profile.html', 
+                                 user=user, 
+                                 message=str(e),
+                                 message_type="error")
+        except Exception as e:
+            db.session.rollback()
+            return render_template('profile.html', 
+                                 user=user, 
+                                 message="An error occurred while updating profile",
+                                 message_type="error")
+    
+    # GET request - show profile form
+    try:
+        return render_template('profile.html', user=user)
+    except TemplateNotFound:
+        abort(404)
