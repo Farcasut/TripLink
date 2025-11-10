@@ -7,6 +7,7 @@ from Backend.blueprints.UserRoles import UserRoles
 from blueprints.userAccess import user_access
 from blueprints.Rides import rides
 from database import db
+from models.User import User
 
 @pytest.fixture()
 def mock_app():
@@ -25,8 +26,11 @@ def mock_app():
     with app.app_context():
         db.create_all()
 
+<<<<<<< HEAD
         from models.User import User
 
+=======
+>>>>>>> 9b45b29 (Corrected some problems)
         driver = User(
                     id=1,
                     username="driver",
