@@ -10,7 +10,6 @@ from flask import Blueprint, render_template, abort, request, jsonify
 
 rides = Blueprint("rides", __name__, url_prefix="/rides")
 
-
 @rides.post("/create")
 @jwt_required()
 def create_ride():
@@ -68,5 +67,72 @@ def get_ride(ride_id):
         return jsonify({'status': e.status, "message": str(e)}), e.status_code
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+    
+@rides.post("/book/<int:ride_id>")
+@jwt_required()
+def book_ride(ride_id):
+    """
+    Allows a passenger to book a seat on a ride.
+    Requires JWT token for authentication.
+
+    Path param:
+        ride_id (int): ID of the ride to book
+
+    Returns:
+        201 - Seat booked successfully
+        400 - No seats left / Already booked
+        404 - Ride not found
+    """
+    try:
+        jwt_map = get_jwt()
+        user_id = jwt_map.get("id")
+
+        ride = RideOffer.query.get(ride_id)
+        exception_raiser(ride is None, "error", "Ride not found.", 404)
+
+        if ride.available_seats <= 0:
+            return jsonify({"status": "error", "message": "No seats available"}), 400
+
+        from models.User import User
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        if user in ride.passengers:
+            return jsonify({"status": "error", "message": "You already booked this ride"}), 400
+
+        ride.passengers.append(user)
+        ride.available_seats -= 1
+        db.session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Seat successfully booked",
+            "content": ride.to_dict()
+        }), 201
+
+    except CustomHttpException as e:
+        return jsonify({'status': e.status, "message": str(e)}), e.status_code
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+@rides.delete("/book/<int:ride_id>")
+@jwt_required()
+def cancel_booking(ride_id):
+    jwt_map = get_jwt()
+    user_id = jwt_map.get("id")
+    ride = RideOffer.query.get(ride_id)
+    if not ride:
+        return jsonify({"status": "error", "message": "Ride not found"}), 404
+    from models.User import User
+    user = User.query.get(user_id)
+    if user not in ride.passengers:
+        return jsonify({"status": "error", "message": "You have not booked this ride"}), 400
+    ride.passengers.remove(user)
+    ride.available_seats += 1
+    db.session.commit()
+    return jsonify({"status": "success", "message": "Booking canceled"}), 200
+
+
 
 
