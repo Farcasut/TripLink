@@ -11,6 +11,7 @@ import models.User
 import models.RideOffer
 import argparse
 from blueprints.userAccess import user_access
+from blueprints.UserProfile import user_profile
 from blueprints.Rides import rides
 
 load_dotenv()
@@ -34,6 +35,7 @@ def create_app():
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
   app.config["JWT_COOKIE_CSRF_PROTECT"] = False
   app.register_blueprint(user_access)
+  app.register_blueprint(user_profile)
   app.register_blueprint(rides)
 
   jwt = JWTManager(app)
