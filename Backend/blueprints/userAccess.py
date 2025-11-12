@@ -121,12 +121,12 @@ def login():
     password = data.get("password")
 
     exception_raiser(not (username and password), "error", "Username and password required", 400)
-    user = User.query.filter_by(username=username).first()
+    user: User = User.query.filter_by(username=username).first()
     exception_raiser(user is None, "error", "Invalid username or password", 401)
 
     hashed_password = hashlib.sha256(password.encode()).hexdigest()
     exception_raiser(user.password != hashed_password, "error", "Invalid username or password", 401)
-    token = create_access_token(identity=str(user.id), expires_delta=timedelta(days=1))
+    token = create_access_token(identity=user.get_identity(), additional_claims=user.get_additional_claims(), expires_delta=timedelta(days=1))
     response = jsonify({"status": "success", "message": "User logged", "content": token})
     set_access_cookies(response, token)
     return response, 200
