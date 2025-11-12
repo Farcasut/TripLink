@@ -24,8 +24,10 @@ class User(db.Model):
     return f"<User {self.username}>"
 
   def get_identity(self):
+    return str(self.id)
+
+  def get_additional_claims(self):
     return {
-      "id": self.id,
-      "username": self.username,
+      "username" : self.username,
       "role": self.role
     }
