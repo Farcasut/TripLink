@@ -20,14 +20,16 @@ class User(db.Model):
       "first_name": self.first_name
     }
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     return f"<User {self.username}>"
 
-  def get_identity(self):
+  def get_identity(self) -> str:
     return str(self.id)
 
-  def get_additional_claims(self):
+  def get_additional_claims(self) -> dict:
     return {
-      "username" : self.username,
+      "first_name": self.first_name,
+      "last_name": self.last_name,
+      "username": self.username,
       "role": self.role
     }

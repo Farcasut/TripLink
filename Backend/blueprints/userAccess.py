@@ -2,7 +2,11 @@ import hashlib
 from datetime import timedelta
 
 from sqlalchemy import or_
-from flask import Blueprint, render_template, abort, request, jsonify, redirect
+from flask import (
+    Blueprint, render_template, abort, request, 
+    jsonify, redirect, current_app
+)
+
 from jinja2 import TemplateNotFound
 import jwt
 import re
@@ -14,7 +18,7 @@ from CustomHttpException import exception_raiser
 from CustomJWTRequired import jwt_noapi_required
 from database import db
 from flask_jwt_extended import (
-    create_access_token, get_jwt_identity,
+    create_access_token, get_jwt,
     jwt_required, verify_jwt_in_request,
     set_access_cookies, unset_jwt_cookies
 )
@@ -176,13 +180,20 @@ def user_dashboard():
       Dashboard page.
     '''
 
-    user_id = get_jwt_identity()
-    user: User = User.query.get(int(user_id))
+    jwt_map = get_jwt()
     
     try:
-        return render_template('dashboard.html', user = user)
+        first_name = jwt_map.get("first_name")
+        last_name = jwt_map.get("last_name")
+        return render_template('dashboard.html', first_name = first_name, last_name = last_name)
     except TemplateNotFound:
         abort(404)
+    except Exception as e:
+        if current_app.debug:
+            print(f'user_dashboard: {e}.')
+            breakpoint()
+            
+        raise
 
 @user_access.route('/logout')
 @jwt_noapi_required
