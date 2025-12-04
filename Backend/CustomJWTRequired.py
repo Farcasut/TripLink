@@ -1,7 +1,7 @@
-from flask import redirect, request
+from flask import redirect, request, current_app
 from functools import wraps
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
-from flask_jwt_extended.exceptions import NoAuthorizationError
+from flask_jwt_extended.exceptions import NoAuthorizationError, CSRFError
 
 def jwt_noapi_required(f):
     @wraps(f)
@@ -10,7 +10,10 @@ def jwt_noapi_required(f):
             verify_jwt_in_request()
         except NoAuthorizationError:
             return redirect('/login')
-        except Exception:
+        except Exception as e:
+            if current_app.debug:
+                print(f'jwt_noapi_required: {e}')
+                
             return redirect('/login')
 
         return f(*args, **kwargs)
