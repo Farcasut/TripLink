@@ -1,18 +1,22 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app, abort
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from database import db
 from blueprints.UserRoles import UserRoles
 from models.RideOffer import RideOffer
-import time
+from jinja2 import TemplateNotFound
 from CustomHttpException import CustomHttpException
 from CustomHttpException import exception_raiser
+from CustomJWTRequired import jwt_noapi_required
 from flask import Blueprint, render_template, abort, request, jsonify
 from models.User import User
+import FetchCities
+from datetime import date, datetime, time
+from sqlalchemy import and_
 
 rides = Blueprint("rides", __name__, url_prefix="/rides")
 
 @rides.post("/create")
-@jwt_required()
+@jwt_noapi_required
 def create_ride():
   """
   Create a new ride offer (driver only).
@@ -28,13 +32,13 @@ def create_ride():
       }
   Returns:
       JSON representation of the ride.
-      -  201, if the ride was
+      - 201, if the ride was created
       - 403, if the user is not a driver
       - 400, db errors
   """
   try:
     jwt_map = get_jwt()
-    user_id = jwt_map.get("id")
+    user_id = int(get_jwt_identity())
     user_role = jwt_map.get("role")
     exception_raiser(user_role != UserRoles.DRIVER.value, "error", "You must be a driver to create a ride.", 403)
     ride: RideOffer = RideOffer(**request.get_json())
@@ -51,7 +55,7 @@ def create_ride():
 
 @rides.get("/<int:ride_id>")
 @jwt_required(optional=True)
-def get_ride(ride_id):
+def get_ride(ride_id: int):
     """
     Retrieve a single ride offer by its ID.
     """
@@ -141,6 +145,54 @@ def cancel_booking(ride_id):
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 400
 
+@rides.get("/")
+@jwt_noapi_required
+def search_rides():
+    try:
+        cities = FetchCities.get_all('romania')
+        today = date.today().isoformat()
+        return render_template('rides/search.html', cities = cities, today = today)
+    except TemplateNotFound:
+        abort(404)
+    except Exception as e:
+        if current_app.debug:
+            print(f'search_rides: {e}.')
+            breakpoint()
 
+        raise
 
+@rides.post("/search")
+@jwt_noapi_required
+def search_rides_results():
+    try:
+        from_city = request.form.get("from_city")
+        to_city = request.form.get("to_city")
+        date = request.form.get("date")
+        dt = datetime.strptime(date, '%Y-%m-%d')
 
+        sod = int(datetime.combine(dt, time.min).timestamp())
+        eod = int(datetime.combine(dt, time.max).timestamp())
+
+        rides = RideOffer.query.filter_by(
+            source=from_city,
+            destination=to_city,
+        ).filter(and_(sod <= RideOffer.departure_date, RideOffer.departure_date <= eod)).all()
+
+        ride_dates = [datetime.fromtimestamp(ride.departure_date).strftime('%Y-%m-%d %H:%M') for ride in rides]
+
+        return render_template(
+            "rides/results.html",
+            rides = list(zip(rides, ride_dates)),
+            from_city = from_city,
+            to_city = to_city,
+            date = date,
+        )
+        
+    except TemplateNotFound:
+        abort(404)
+    except Exception as e:
+        if current_app.debug:
+            print(f'search_rides_results: {e}.')
+            breakpoint()
+            
+        raise

@@ -10,8 +10,11 @@ from database import db
 import models.User
 import models.RideOffer
 import argparse
+
 from blueprints.userAccess import user_access
+from blueprints.Cities import cities
 from blueprints.Rides import rides
+import FetchCities
 
 load_dotenv()
 
@@ -26,12 +29,15 @@ def create_app():
     f"postgresql://{postgres_user}:{postgres_password}"
     f"@{postgres_host}:{postgres_port}/{postgres_db_name}"
   )
-  
+
+  # TODO(fix): solve CSRF.
+  app.config['JWT_COOKIE_CSRF_PROTECT'] = False
   app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET")
   app.config['JWT_TOKEN_LOCATION'] = ['cookies']
   app.config['JWT_COOKIE_SECURE'] = False
   app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
   app.register_blueprint(user_access)
+  app.register_blueprint(cities)
   app.register_blueprint(rides)
   jwt = JWTManager(app)
   return app
@@ -54,4 +60,5 @@ if __name__ == "__main__":
   app = create_app()
   setup_db(app, args.reset_db)
   print("Registered tables:", db.Model.metadata.tables.keys())
+  FetchCities.prefetch('romania')
   app.run(host=os.getenv("host"), port=int(os.getenv("port")), debug=True)
