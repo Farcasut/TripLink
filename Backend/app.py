@@ -7,7 +7,7 @@ from flask_jwt_extended import JWTManager
 import blueprints.Rides
 from blueprints.userAccess import user_access
 from database import db
-import models.User
+from models.User import User
 import models.RideOffer
 import argparse
 
@@ -40,6 +40,14 @@ def create_app():
   app.register_blueprint(cities)
   app.register_blueprint(rides)
   jwt = JWTManager(app)
+
+  @jwt.user_lookup_loader
+  def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data.get("sub")
+    if identity is None:
+      return None
+    return User.query.get(int(identity))
+
   return app
 
 def setup_db(app: Flask, reset_db: bool = False):

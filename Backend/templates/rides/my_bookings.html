@@ -1,0 +1,65 @@
+{% extends "commons/base.html" %}
+
+{% block title %}Triplink - My Bookings{% endblock %}
+
+{% block header_title %}
+My Bookings
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-center">
+  <div class="w-full max-w-4xl space-y-4">
+
+    {% if bookings|length == 0 %}
+      <div class="bg-white p-6 rounded shadow text-center text-gray-600">
+        You have no booking requests.
+      </div>
+    {% else %}
+      {% for booking in bookings %}
+        <div class="bg-white p-6 rounded shadow flex justify-between items-center">
+
+          <!-- LEFT: Ride + Driver -->
+          <div class="space-y-1">
+            <div class="text-lg font-semibold">
+              {{ booking.ride.source }} → {{ booking.ride.destination }}
+            </div>
+
+            <div class="text-sm text-gray-600">
+              Departure: {{ booking.departure_display }}
+            </div>
+
+            <div class="text-sm text-gray-700">
+              Driver:
+              {{ booking.ride.author.first_name }}
+              {{ booking.ride.author.last_name }}
+              (<span class="text-gray-500">@{{ booking.ride.author.username }}</span>)
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end space-y-2">
+
+            <div class="font-semibold
+              {% if booking.status == 'pending' %} text-yellow-600
+              {% elif booking.status == 'accepted' %} text-green-600
+              {% else %} text-red-600
+              {% endif %}">
+              {{ booking.status | capitalize }}
+            </div>
+
+            <form action="/rides/booking/{{ booking.id }}/delete" method="POST">
+              <button type="submit"
+                      class="px-4 py-1.5 bg-gray-500 text-white rounded
+                             hover:bg-gray-600 transition text-sm">
+                Delete
+              </button>
+            </form>
+
+          </div>
+
+        </div>
+      {% endfor %}
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

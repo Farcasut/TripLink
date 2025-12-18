@@ -10,6 +10,7 @@ class User(db.Model):
   email: str = db.Column(db.String(120), unique=True, nullable=False)
   last_name: str = db.Column(db.String(32), nullable=False)
   first_name: str = db.Column(db.String(32), nullable=False)
+  bookings = db.relationship("Booking", backref="passenger", lazy=True)
 
   def to_dict(self):
     return {

@@ -1,0 +1,112 @@
+{% extends "commons/base.html" %}
+
+{% block title %}Triplink - Create Ride{% endblock %}
+
+{% block header_title %}
+Create Ride
+{% endblock %}
+
+{% block content %}
+{% if role != 2 %}
+  <div class="bg-white shadow rounded-lg p-6 border border-gray-200 max-w-xl mx-auto">
+    <h3 class="text-lg font-semibold text-red-600">Access denied</h3>
+    <p class="text-gray-700 mt-2">You must be a driver to create a ride.</p>
+  </div>
+{% else %}
+  <div class="flex justify-center">
+    <div class="w-full max-w-2xl bg-white shadow rounded-lg p-6 border border-gray-200">
+      <h3 class="text-xl font-semibold mb-4">Ride Details</h3>
+
+      <div id="msg" class="hidden mb-4 p-3 rounded"></div>
+
+      <form id="createRideForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">From (source)</label>
+          <input id="source" type="text" required
+                 class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">To (destination)</label>
+          <input id="destination" type="text" required
+                 class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Departure date/time</label>
+            <input id="departure" type="datetime-local" required
+                   class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Available seats</label>
+            <input id="available_seats" type="number" min="1" required
+                   class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Price (€)</label>
+          <input id="price" type="number" min="0" step="1" required
+                 class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+        </div>
+
+        <button type="submit"
+                class="w-full bg-secondary text-white py-2 rounded hover:bg-primary transition">
+          Create Ride
+        </button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const form = document.getElementById("createRideForm");
+  const msg = document.getElementById("msg");
+
+  function showMsg(text, ok) {
+    msg.classList.remove("hidden");
+    msg.className =
+      "mb-4 p-3 rounded " +
+      (ok ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700");
+    msg.textContent = text;
+  }
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const departureUnix = Math.floor(
+        new Date(document.getElementById("departure").value).getTime() / 1000
+      );
+
+      const payload = {
+        source: document.getElementById("source").value.trim(),
+        destination: document.getElementById("destination").value.trim(),
+        departure_date: departureUnix,
+        price: parseInt(document.getElementById("price").value, 10),
+        available_seats: parseInt(document.getElementById("available_seats").value, 10),
+      };
+
+      const res = await fetch("/rides/create", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (res.ok) {
+        showMsg("Ride created successfully.", true);
+        form.reset();
+      } else {
+        showMsg(data?.message || "Failed to create ride.", false);
+      }
+    });
+  }
+</script>
+{% endblock %}

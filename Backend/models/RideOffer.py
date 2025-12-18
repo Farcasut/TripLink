@@ -18,11 +18,13 @@ class RideOffer(db.Model):
   active: int = db.Column(db.Boolean, default=True, nullable=False)
   price: int = db.Column(db.Integer, nullable=False)
   available_seats: int = db.Column(db.Integer, nullable=False)
+  author = db.relationship("User", backref="rides_created")
   passengers = db.relationship(
     "User",
     secondary=ride_passengers,
     backref=db.backref("rides_joined", lazy=True)
   )
+  bookings = db.relationship("Booking", backref="ride", lazy=True)
 
   def to_dict(self):
     return {

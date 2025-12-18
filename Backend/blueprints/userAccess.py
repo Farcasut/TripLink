@@ -18,7 +18,7 @@ from CustomHttpException import exception_raiser
 from CustomJWTRequired import jwt_noapi_required
 from database import db
 from flask_jwt_extended import (
-    create_access_token, get_jwt,
+    create_access_token, get_jwt, get_current_user,
     jwt_required, verify_jwt_in_request,
     set_access_cookies, unset_jwt_cookies
 )
@@ -179,13 +179,12 @@ def user_dashboard():
     '''
       Dashboard page.
     '''
-
-    jwt_map = get_jwt()
     
     try:
-        first_name = jwt_map.get("first_name")
-        last_name = jwt_map.get("last_name")
-        return render_template('dashboard.html', first_name = first_name, last_name = last_name)
+        user = get_current_user()
+        if user is None:
+            return redirect("/login")
+        return render_template('dashboard.html', first_name = user.first_name, last_name = user.last_name, role = user.role)
     except TemplateNotFound:
         abort(404)
     except Exception as e:
