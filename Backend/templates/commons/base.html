@@ -32,22 +32,16 @@
 
         <nav>
             <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Dashboard </a>
-
-            {% if role == 2 %}
-                <!-- DRIVER -->
+            {% if is_driver %}
                 <a href="/rides/create" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Create Ride </a>
                 <a href="/rides/all_rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Rides </a>
-                <a href="/rides/incoming_bookings" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Incoming Bookings </a>
-
+                <a href="/bookings/incoming" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Incoming Bookings </a>
             {% else %}
-                <!-- PASSENGER -->
                 <a href="/rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Search Rides </a>
-
-                <a href="/rides/my_bookings" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Bookings </a>
+                <a href="/bookings/my" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Bookings </a>
             {% endif %}
+        </nav>
 
-            <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Settings </a>
-         </nav>
     </div>
 
     <div class="flex-1 flex flex-col">
@@ -69,7 +63,7 @@
             <div class="relative">
                 <button id="profileBtn"
                         class="flex items-center space-x-2 p-1 rounded hover:bg-gray-200 transition">
-                    <span>{{ last_name }} {{ first_name }}</span>
+                    <span>{{ last_name|default('') }} {{ first_name|default('') }}</span>
                 </button>
 
                 <div id="profileMenu"

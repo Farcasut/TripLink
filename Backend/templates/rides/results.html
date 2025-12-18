@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.textContent = "Sending...";
 
             try {
-                const res = await fetch(`/rides/book/${rideId}`, {
+                const res = await fetch(`/bookings/request/${rideId}`, {
                     method: "POST",
                     credentials: "include"
                 });

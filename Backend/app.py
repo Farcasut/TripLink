@@ -14,6 +14,7 @@ import argparse
 from blueprints.userAccess import user_access
 from blueprints.Cities import cities
 from blueprints.Rides import rides
+from blueprints.Bookings import bookings
 import FetchCities
 
 load_dotenv()
@@ -39,6 +40,7 @@ def create_app():
   app.register_blueprint(user_access)
   app.register_blueprint(cities)
   app.register_blueprint(rides)
+  app.register_blueprint(bookings)
   jwt = JWTManager(app)
 
   @jwt.user_lookup_loader
@@ -46,7 +48,7 @@ def create_app():
     identity = jwt_data.get("sub")
     if identity is None:
       return None
-    return User.query.get(int(identity))
+    return db.session.get(User, int(identity))
 
   return app
 

@@ -11,7 +11,7 @@ from jinja2 import TemplateNotFound
 import jwt
 import re
 
-from blueprints.UserRoles import UserRoles
+from models.enums import UserRole
 from models.User import User
 from CustomHttpException import CustomHttpException
 from CustomHttpException import exception_raiser
@@ -87,7 +87,7 @@ def register():
     user: User = User(**data)
     exception_raiser(not is_email_valid(user.email), "error", "Invalid email", 400)
     exception_raiser(user_exists(user.email, user.username), "error", "Email already exists", 400)
-    user.role = UserRoles.DEFAULT.value
+    user.role = UserRole.DEFAULT
     db.session.add(user)
     db.session.commit()
     return jsonify({"status": "success", "message": "User registered"}), 201
@@ -184,7 +184,8 @@ def user_dashboard():
         user = get_current_user()
         if user is None:
             return redirect("/login")
-        return render_template('dashboard.html', first_name = user.first_name, last_name = user.last_name, role = user.role)
+        return render_template('dashboard.html', first_name=user.first_name, last_name=user.last_name, is_driver=user.role == UserRole.DRIVER)
+
     except TemplateNotFound:
         abort(404)
     except Exception as e:
