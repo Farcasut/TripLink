@@ -41,20 +41,59 @@ def is_email_valid(email: str) -> bool:
   else:
     return False
 
+def is_password_strong(password: str) -> (bool, list[str]):
+    '''
+        Validate password.
+        - At least 8 characters.
+        - Should contain a number.
+        - Should contain at least a lowercase and uppercase letter.
+    '''
 
-def user_exists(email: str, username: str) -> bool:
-  """
-  Check whether a user with the given email or username already exists.
-  Args:
-      email (str): User's email address.
-      username (str): User's username.
-  Returns:
-      bool: True if user exists, False otherwise.
-  """
-  return User.query.filter(
-    or_(User.email == email, User.username == username)
-  ).first() is not None
+    length = len(password) >= 8
+    number = re.search(r"\d", password)
+    mix = re.search(r"[A-Z]", password) and re.search(r"[a-z]", password)
+    result = (
+        length and
+        number and
+        mix
+    )
 
+    content = []
+    if not length:
+        content += ['Should contain at least 8 characters.']
+    
+    if not number:
+        content += ['Should contain a number.']
+
+    if not mix:
+        content += ['Should contain a mix of letters (case-wise).']
+    
+    return result, content
+
+
+def user_exists(email: str, username: str) -> (bool, list[str]):
+    """
+        Check whether a user with the given email or username already exists.
+        Args:
+            email (str): User's email address.
+            username (str): User's username.
+        Returns:
+            bool: True if user exists, False otherwise.
+    """
+
+    existing_user = User.query.filter(
+        or_(User.email == email, User.username == username)
+    ).first()
+
+    content = []
+    if existing_user is not None:
+        if existing_user.username == username:
+            content += ["Username already exists."]
+
+        if existing_user.email == email:
+            content += ["Email already exists."]
+
+    return existing_user is not None, content
 
 @user_access.post("/register")
 def register():
@@ -83,10 +122,29 @@ def register():
   """
   try:
     data = request.get_json()
+    password = data["password"]
+    assert (password is not None)
+
+    # 1. Validate password strength.
+    sres, scont = is_password_strong(password)
+    if not sres:
+        return jsonify({
+            'status': 'error',
+            'message': 'Password is too weak.',
+            'content': scont
+        }), 400
+    
     data["password"] = hashlib.sha256(data["password"].encode()).hexdigest()
     user: User = User(**data)
-    exception_raiser(not is_email_valid(user.email), "error", "Invalid email", 400)
-    exception_raiser(user_exists(user.email, user.username), "error", "Email already exists", 400)
+    exception_raiser(not is_email_valid(user.email), "error", "Invalid email.", 400)
+    ures, ucont = user_exists(user.email, user.username)
+    if ures:
+        return jsonify({
+            'status': 'error',
+            'message': 'User already exists.',
+            'content': ucont
+        }), 400
+
     user.role = UserRoles.DEFAULT.value
     db.session.add(user)
     db.session.commit()
@@ -185,7 +243,11 @@ def user_dashboard():
     try:
         first_name = jwt_map.get("first_name")
         last_name = jwt_map.get("last_name")
-        return render_template('dashboard.html', first_name = first_name, last_name = last_name)
+        username = jwt_map.get("username")
+        return render_template('dashboard.html', 
+            first_name = first_name, 
+            last_name = last_name,
+            username = username)
     except TemplateNotFound:
         abort(404)
     except Exception as e:
