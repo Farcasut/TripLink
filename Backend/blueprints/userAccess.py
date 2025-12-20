@@ -91,7 +91,7 @@ def user_exists(email: str, username: str) -> (bool, list[str]):
             content += ["Username already exists."]
 
         if existing_user.email == email:
-            content += ["Email already exists"]
+            content += ["Email already exists."]
 
     return existing_user is not None, content
 

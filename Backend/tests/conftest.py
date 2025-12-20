@@ -3,7 +3,7 @@ import pytest
 from flask import Flask
 from flask_jwt_extended import JWTManager
 
-from Backend.blueprints.UserRoles import UserRoles
+from blueprints.UserRoles import UserRoles
 from blueprints.userAccess import user_access
 from blueprints.Rides import rides
 from database import db

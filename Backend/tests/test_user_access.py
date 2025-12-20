@@ -20,7 +20,7 @@ def test_register_success(client, mock_app):
     data = {
         "username": "testuser",
         "email": "test@example.com",
-        "password": "mypassword",
+        "password": "mypassword", # FIX: Password validation.
         "first_name": "Test",
         "last_name": "User",
         "role": UserRoles.DEFAULT.value
@@ -30,7 +30,7 @@ def test_register_success(client, mock_app):
 
     body = response.get_json()
     assert body["status"] == "success"
-    assert "content" in body  # token included
+    # assert "content" in body # token is not present anymore
 
     with mock_app.app_context():
         user = User.query.filter_by(username="testuser").first()
@@ -45,11 +45,12 @@ def test_register_invalid_email(client):
     data = {
         "username": "bademail",
         "email": "invalidemail",
-        "password": "pw",
+        "password": "pw", # FIX: Password validation.
         "first_name": "Bad",
         "last_name": "Email",
         "role": UserRoles.DEFAULT.value
     }
+
     response = client.post("/register", json=data)
     body = response.get_json()
 
@@ -64,7 +65,7 @@ def test_register_duplicate_user(client, mock_app):
         user: User = User(
             username="duplicate",
             email="dup@example.com",
-            password=hash_pw("pw"),
+            password=hash_pw("pw"), # FIX: Password validation.
             role=UserRoles.DEFAULT.value,
             first_name="Dup",
             last_name="User"
@@ -76,7 +77,7 @@ def test_register_duplicate_user(client, mock_app):
     data = {
         "username": "newuser",
         "email": "dup@example.com",
-        "password": "pw",
+        "password": "pw", # FIX: Password validation.
         "first_name": "New",
         "last_name": "User",
         "role": 1
@@ -85,7 +86,10 @@ def test_register_duplicate_user(client, mock_app):
     body = response.get_json()
 
     assert response.status_code == 400
-    assert "Email already exists" in body["message"]
+    assert 'message' in body
+    assert body['message'] == 'User already exists.'
+    assert 'content' in body
+    assert "Email already exists." in body["content"]
 
 
 # -----------------
@@ -97,7 +101,7 @@ def test_login_success(client, mock_app):
         user: User = User(
             username="loginuser",
             email="login@example.com",
-            password=hash_pw("secret"),
+            password=hash_pw("secret"), # FIX: Password validation.
             role=UserRoles.DEFAULT.value,
             first_name="Login",
             last_name="User"
@@ -105,7 +109,7 @@ def test_login_success(client, mock_app):
         db.session.add(user)
         db.session.commit()
 
-    data = {"username": "loginuser", "password": "secret"}
+    data = {"username": "loginuser", "password": "secret"} # FIX: Password validation.
     response = client.post("/login", json=data)
 
     assert response.status_code == 200
@@ -116,7 +120,7 @@ def test_login_wrong_password(client, mock_app):
         user: User = User(
             username="wrongpw",
             email="wrong@example.com",
-            password=hash_pw("rightpassword"),
+            password=hash_pw("rightpassword"), # FIX: Password validation.
             role=UserRoles.DEFAULT.value,
             first_name="Wrong",
             last_name="Password"
