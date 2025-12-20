@@ -20,7 +20,7 @@ def test_register_success(client, mock_app):
     data = {
         "username": "testuser",
         "email": "test@example.com",
-        "password": "mypassword", # FIX: Password validation.
+        "password": "strongPassword1",
         "first_name": "Test",
         "last_name": "User",
         "role": UserRoles.DEFAULT.value
@@ -45,7 +45,7 @@ def test_register_invalid_email(client):
     data = {
         "username": "bademail",
         "email": "invalidemail",
-        "password": "pw", # FIX: Password validation.
+        "password": "strongPassword1",
         "first_name": "Bad",
         "last_name": "Email",
         "role": UserRoles.DEFAULT.value
@@ -65,7 +65,7 @@ def test_register_duplicate_user(client, mock_app):
         user: User = User(
             username="duplicate",
             email="dup@example.com",
-            password=hash_pw("pw"), # FIX: Password validation.
+            password=hash_pw("strongPassword1"),
             role=UserRoles.DEFAULT.value,
             first_name="Dup",
             last_name="User"
@@ -77,7 +77,7 @@ def test_register_duplicate_user(client, mock_app):
     data = {
         "username": "newuser",
         "email": "dup@example.com",
-        "password": "pw", # FIX: Password validation.
+        "password": "strongPassword1",
         "first_name": "New",
         "last_name": "User",
         "role": 1
