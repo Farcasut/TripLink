@@ -1,112 +1,192 @@
-{% extends "commons/base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Triplink - Create Ride</title>
 
-{% block title %}Triplink - Create Ride{% endblock %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E3A8A',
+                        secondary: '#2563EB'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
 
-{% block header_title %}
-Create Ride
-{% endblock %}
+<body class="bg-gray-100 min-h-screen flex">
+    <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-30"></div>
 
-{% block content %}
-{% if not is_driver %}
-  <div class="bg-white shadow rounded-lg p-6 border border-gray-200 max-w-xl mx-auto">
-    <h3 class="text-lg font-semibold text-red-600">Access denied</h3>
-    <p class="text-gray-700 mt-2">You must be a driver to create a ride.</p>
-  </div>
-{% else %}
-  <div class="flex justify-center">
-    <div class="w-full max-w-2xl bg-white shadow rounded-lg p-6 border border-gray-200">
-      <h3 class="text-xl font-semibold mb-4">Ride Details</h3>
+    <div id="sidebar"
+         class="bg-gray-800 text-white w-64 py-7 px-2 space-y-6
+                fixed inset-y-0 left-0 transform -translate-x-full
+                transition-transform duration-200 ease-in-out
+                z-40">
 
-      <div id="msg" class="hidden mb-4 p-3 rounded"></div>
+        <h1 class="text-2xl font-bold text-center mb-8">Triplink</h1>
 
-      <form id="createRideForm" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">From (source)</label>
-          <input id="source" type="text" required
-                 class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">To (destination)</label>
-          <input id="destination" type="text" required
-                 class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Departure date/time</label>
-            <input id="departure" type="datetime-local" required
-                   class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Available seats</label>
-            <input id="available_seats" type="number" min="1" required
-                   class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Price (€)</label>
-          <input id="price" type="number" min="0" step="1" required
-                 class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
-        </div>
-
-        <button type="submit"
-                class="w-full bg-secondary text-white py-2 rounded hover:bg-primary transition">
-          Create Ride
-        </button>
-      </form>
+        <nav>
+            <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Dashboard </a>
+            {% if is_driver %}
+                <a href="/rides/create" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Create Ride </a>
+                <a href="/rides/all_rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Rides </a>
+                <a href="/bookings/incoming" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Incoming Bookings </a>
+            {% else %}
+                <a href="/rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Search Rides </a>
+                <a href="/bookings/my" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Bookings </a>
+            {% endif %}
+        </nav>
     </div>
-  </div>
-{% endif %}
-{% endblock %}
 
-{% block scripts %}
-<script>
-  const form = document.getElementById("createRideForm");
-  const msg = document.getElementById("msg");
+    <div class="flex-1 flex flex-col">
+        <header class="relative flex justify-between items-center bg-white shadow px-4 py-3">
 
-  function showMsg(text, ok) {
-    msg.classList.remove("hidden");
-    msg.className =
-      "mb-4 p-3 rounded " +
-      (ok ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700");
-    msg.textContent = text;
-  }
+            <button id="burgerBtn"
+                class="text-gray-800 p-2 rounded hover:bg-gray-200 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
 
-  if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+            <h2 class="absolute left-1/2 -translate-x-1/2 text-xl font-semibold">
+                Create Ride
+            </h2>
+        </header>
 
-      const departureUnix = Math.floor(
-        new Date(document.getElementById("departure").value).getTime() / 1000
-      );
+        <main class="p-6">
 
-      const payload = {
-        source: document.getElementById("source").value.trim(),
-        destination: document.getElementById("destination").value.trim(),
-        departure_date: departureUnix,
-        price: parseInt(document.getElementById("price").value, 10),
-        available_seats: parseInt(document.getElementById("available_seats").value, 10),
-      };
+            {% if not is_driver %}
+              <div class="bg-white shadow rounded-lg p-6 border border-gray-200 max-w-xl mx-auto">
+                <h3 class="text-lg font-semibold text-red-600">Access denied</h3>
+                <p class="text-gray-700 mt-2">You must be a driver to create a ride.</p>
+              </div>
+            {% else %}
+              <div class="flex justify-center">
+                <div class="w-full max-w-2xl bg-white shadow rounded-lg p-6 border border-gray-200">
+                  <h3 class="text-xl font-semibold mb-4">Ride Details</h3>
 
-      const res = await fetch("/rides/create", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+                  <div id="msg" class="hidden mb-4 p-3 rounded"></div>
 
-      const data = await res.json().catch(() => null);
+                  <form id="createRideForm" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">From (source)</label>
+                      <input id="source" type="text" required
+                             class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+                    </div>
 
-      if (res.ok) {
-        showMsg("Ride created successfully.", true);
-        form.reset();
-      } else {
-        showMsg(data?.message || "Failed to create ride.", false);
-      }
-    });
-  }
-</script>
-{% endblock %}
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">To (destination)</label>
+                      <input id="destination" type="text" required
+                             class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Departure date/time</label>
+                        <input id="departure" type="datetime-local" required
+                               class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+                      </div>
+
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Available seats</label>
+                        <input id="available_seats" type="number" min="1" required
+                               class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Price (€)</label>
+                      <input id="price" type="number" min="0" step="1" required
+                             class="w-full border border-gray-300 rounded px-3 py-2 focus:ring-secondary" />
+                    </div>
+
+                    <button type="submit"
+                            class="w-full bg-secondary text-white py-2 rounded hover:bg-primary transition">
+                      Create Ride
+                    </button>
+                  </form>
+                </div>
+              </div>
+            {% endif %}
+
+        </main>
+    </div>
+
+    <script>
+        const overlay = document.getElementById("overlay");
+        const burger = document.getElementById("burgerBtn");
+        const sidebar = document.getElementById("sidebar");
+
+        function openSidebar() {
+            sidebar.classList.remove("-translate-x-full");
+            overlay.classList.remove("hidden");
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add("-translate-x-full");
+            overlay.classList.add("hidden");
+        }
+
+        burger.addEventListener("click", () => {
+            sidebar.classList.contains("-translate-x-full")
+                ? openSidebar()
+                : closeSidebar();
+        });
+
+        overlay.addEventListener("click", closeSidebar);
+
+        const form = document.getElementById("createRideForm");
+        const msg = document.getElementById("msg");
+
+        function showMsg(text, ok) {
+          msg.classList.remove("hidden");
+          msg.className =
+            "mb-4 p-3 rounded " +
+            (ok ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700");
+          msg.textContent = text;
+        }
+
+        if (form) {
+          form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const departureUnix = Math.floor(
+              new Date(document.getElementById("departure").value).getTime() / 1000
+            );
+
+            const payload = {
+              source: document.getElementById("source").value.trim(),
+              destination: document.getElementById("destination").value.trim(),
+              departure_date: departureUnix,
+              price: parseInt(document.getElementById("price").value, 10),
+              available_seats: parseInt(document.getElementById("available_seats").value, 10),
+            };
+
+            const res = await fetch("/rides/create", {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const data = await res.json().catch(() => null);
+
+            if (res.ok) {
+              showMsg("Ride created successfully.", true);
+              form.reset();
+            } else {
+              showMsg(data?.message || "Failed to create ride.", false);
+            }
+          });
+        }
+    </script>
+
+</body>
+</html>

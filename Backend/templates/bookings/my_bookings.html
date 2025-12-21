@@ -1,65 +1,169 @@
-{% extends "commons/base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Triplink - My Bookings</title>
 
-{% block title %}Triplink - My Bookings{% endblock %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E3A8A',
+                        secondary: '#2563EB'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
 
-{% block header_title %}
-My Bookings
-{% endblock %}
+<body class="bg-gray-100 min-h-screen flex">
+    <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-30"></div>
 
-{% block content %}
-<div class="flex justify-center">
-  <div class="w-full max-w-4xl space-y-4">
+    <div id="sidebar"
+         class="bg-gray-800 text-white w-64 py-7 px-2 space-y-6
+                fixed inset-y-0 left-0 transform -translate-x-full
+                transition-transform duration-200 ease-in-out
+                z-40">
 
-    {% if bookings|length == 0 %}
-      <div class="bg-white p-6 rounded shadow text-center text-gray-600">
-        You have no booking requests.
-      </div>
-    {% else %}
-      {% for booking in bookings %}
-        <div class="bg-white p-6 rounded shadow flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-center mb-8">Triplink</h1>
 
-          <!-- LEFT: Ride + Driver -->
-          <div class="space-y-1">
-            <div class="text-lg font-semibold">
-              {{ booking.ride.source }} → {{ booking.ride.destination }}
+        <nav>
+            <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Dashboard </a>
+            {% if is_driver %}
+                <a href="/rides/create" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Create Ride </a>
+                <a href="/rides/all_rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Rides </a>
+                <a href="/bookings/incoming" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Incoming Bookings </a>
+            {% else %}
+                <a href="/rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Search Rides </a>
+                <a href="/bookings/my" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Bookings </a>
+            {% endif %}
+        </nav>
+    </div>
+
+    <div class="flex-1 flex flex-col">
+        <header class="relative flex justify-between items-center bg-white shadow px-4 py-3">
+
+            <button id="burgerBtn"
+                class="text-gray-800 p-2 rounded hover:bg-gray-200 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+
+            <h2 class="absolute left-1/2 -translate-x-1/2 text-xl font-semibold">
+                My Bookings
+            </h2>
+        </header>
+
+        <main class="p-6">
+            <div class="flex justify-center">
+                <div class="w-full max-w-4xl space-y-4">
+
+                    {% if bookings|length == 0 %}
+                        <div class="bg-white p-6 rounded shadow text-center text-gray-600">
+                            You have no booking requests.
+                        </div>
+                    {% else %}
+                        {% for booking in bookings %}
+                        <div class="booking-card bg-white p-6 rounded shadow flex justify-between items-center">
+
+                            <div class="space-y-1">
+                                <div class="text-lg font-semibold">
+                                    {{ booking.ride.source }} → {{ booking.ride.destination }}
+                                </div>
+
+                                <div class="text-sm text-gray-600">
+                                    Departure: {{ booking.departure_display }}
+                                </div>
+
+                                <div class="text-sm text-gray-700">
+                                    Driver:
+                                    {{ booking.ride.author.first_name }}
+                                    {{ booking.ride.author.last_name }}
+                                    (<span class="text-gray-500">@{{ booking.ride.author.username }}</span>)
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-end space-y-2">
+
+                                <div class="font-semibold
+                                  {% if booking.status == 'pending' %} text-yellow-600
+                                  {% elif booking.status == 'accepted' %} text-green-600
+                                  {% else %} text-red-600
+                                  {% endif %}">
+                                  {{ booking.status | capitalize }}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  class="delete-btn px-4 py-1.5 bg-gray-500 text-white rounded
+                                         hover:bg-gray-600 transition text-sm"
+                                  data-booking-id="{{ booking.id }}">
+                                  Delete
+                                </button>
+
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                </div>
             </div>
+        </main>
+    </div>
 
-            <div class="text-sm text-gray-600">
-              Departure: {{ booking.departure_display }}
-            </div>
+    <script>
+        const overlay = document.getElementById("overlay");
+        const burger = document.getElementById("burgerBtn");
+        const sidebar = document.getElementById("sidebar");
 
-            <div class="text-sm text-gray-700">
-              Driver:
-              {{ booking.ride.author.first_name }}
-              {{ booking.ride.author.last_name }}
-              (<span class="text-gray-500">@{{ booking.ride.author.username }}</span>)
-            </div>
-          </div>
+        function openSidebar() {
+            sidebar.classList.remove("-translate-x-full");
+            overlay.classList.remove("hidden");
+        }
 
-          <div class="flex flex-col items-end space-y-2">
+        function closeSidebar() {
+            sidebar.classList.add("-translate-x-full");
+            overlay.classList.add("hidden");
+        }
 
-            <div class="font-semibold
-              {% if booking.status == 'pending' %} text-yellow-600
-              {% elif booking.status == 'accepted' %} text-green-600
-              {% else %} text-red-600
-              {% endif %}">
-              {{ booking.status | capitalize }}
-            </div>
+        burger.addEventListener("click", () => {
+            sidebar.classList.contains("-translate-x-full")
+                ? openSidebar()
+                : closeSidebar();
+        });
 
-            <form action="/bookings/delete/{{ booking.id }}" method="POST">
-              <button type="submit"
-                      class="px-4 py-1.5 bg-gray-500 text-white rounded
-                             hover:bg-gray-600 transition text-sm">
-                Delete
-              </button>
-            </form>
+        overlay.addEventListener("click", closeSidebar);
 
-          </div>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const bookingId = btn.dataset.bookingId;
+                    const card = btn.closest(".booking-card");
 
-        </div>
-      {% endfor %}
-    {% endif %}
+                    if (!confirm("Delete this booking?")) return;
 
-  </div>
-</div>
-{% endblock %}
+                    const res = await fetch(`/bookings/delete/${bookingId}`, {
+                        method: "POST",
+                        credentials: "include"
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        card.remove();
+                    } else {
+                        alert(data.message || "Failed to delete booking");
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

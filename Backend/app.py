@@ -1,14 +1,10 @@
 import os
-from typing import Final
 from flask import Flask
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
-
-import blueprints.Rides
 from blueprints.userAccess import user_access
 from database import db
-from models.User import User
-import models.RideOffer
+from sqlalchemy import text
 import argparse
 
 from blueprints.userAccess import user_access
@@ -42,25 +38,20 @@ def create_app():
   app.register_blueprint(rides)
   app.register_blueprint(bookings)
   jwt = JWTManager(app)
-
-  @jwt.user_lookup_loader
-  def user_lookup_callback(_jwt_header, jwt_data):
-    identity = jwt_data.get("sub")
-    if identity is None:
-      return None
-    return db.session.get(User, int(identity))
-
   return app
 
 def setup_db(app: Flask, reset_db: bool = False):
-  db.init_app(app)
+    db.init_app(app)
 
-  with app.app_context():
-    if reset_db:
-      print("Dropped all tables.")
-      db.drop_all()
-    db.create_all()
-    print("Created all tables.")
+    with app.app_context():
+        if reset_db:
+            print("Dropped all tables.")
+            with db.engine.begin() as conn:
+                conn.execute(text("DROP SCHEMA public CASCADE"))
+                conn.execute(text("CREATE SCHEMA public"))
+
+        db.create_all()
+        print("Created all tables.")
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run the Flask app.")

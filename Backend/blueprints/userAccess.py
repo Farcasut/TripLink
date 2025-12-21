@@ -18,9 +18,10 @@ from CustomHttpException import exception_raiser
 from CustomJWTRequired import jwt_noapi_required
 from database import db
 from flask_jwt_extended import (
-    create_access_token, get_jwt, get_current_user,
+    create_access_token, get_jwt,
     jwt_required, verify_jwt_in_request,
-    set_access_cookies, unset_jwt_cookies
+    set_access_cookies, unset_jwt_cookies,
+    get_csrf_token
 )
 
 user_access = Blueprint("user_access", __name__)
@@ -179,12 +180,17 @@ def user_dashboard():
     '''
       Dashboard page.
     '''
-    
+
+    jwt_map = get_jwt()
+
     try:
-        user = get_current_user()
-        if user is None:
-            return redirect("/login")
-        return render_template('dashboard.html', first_name=user.first_name, last_name=user.last_name, is_driver=user.role == UserRole.DRIVER)
+        return render_template(
+            "dashboard.html",
+            first_name=jwt_map.get("first_name", ""),
+            last_name=jwt_map.get("last_name", ""),
+            username = jwt_map.get("username",""),
+            is_driver=(jwt_map.get("role") == UserRole.DRIVER),
+        )
 
     except TemplateNotFound:
         abort(404)
@@ -194,6 +200,7 @@ def user_dashboard():
             breakpoint()
             
         raise
+    
 
 @user_access.route('/logout')
 @jwt_noapi_required
