@@ -75,20 +75,39 @@ def create_ride():
   except Exception as e:
     db.session.rollback()
     return jsonify({"status": "error", "message": str(e)}), 400
-
+  
 @rides.get("/create")
 @jwt_noapi_required
-def create_ride_page():
+def create_ride_form():
+    """
+    Render the create ride form (driver only).
+    """
     try:
-        _, jwt_map = get_jwt_user(require_driver=True)
-
+        jwt_map = get_jwt()
+        user_role = jwt_map.get("role")
+        
+        # Redirect non-drivers
+        exception_raiser(user_role != UserRole.DRIVER, "error", "You must be a driver to access this page.", 403)
+        
+        cities = FetchCities.get_all('romania')
+        today = date.today().isoformat()
+    
         return render_template(
             "rides/create.html",
+            cities=cities,
+            today=today,
             **base_context_from_jwt(jwt_map)
         )
+        
+    except CustomHttpException as e:
+        return redirect('/dashboard')
     except TemplateNotFound:
         abort(404)
-
+    except Exception as e:
+        if current_app.debug:
+            print(f'create_ride_form: {e}.')
+            breakpoint()
+        raise
 
 @rides.get("/all_rides")
 @jwt_noapi_required
