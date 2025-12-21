@@ -36,7 +36,7 @@ def is_email_valid(email: str) -> bool:
   else:
     return False
 
-@user_profile.route("/profile", methods=["GET", "POST"])
+@user_profile.route("/profile", methods=["GET", "POST"], strict_slashes=False)
 @jwt_noapi_required
 def profile():
     """
