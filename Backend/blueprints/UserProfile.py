@@ -2,11 +2,12 @@ import hashlib
 from datetime import timedelta
 
 from sqlalchemy import or_
-from flask import Blueprint, render_template, abort, request, jsonify, redirect
+from flask import Blueprint, render_template, abort, request, jsonify, redirect, make_response
 from jinja2 import TemplateNotFound
 import re
 
 from models.User import User
+from blueprints.userAccess import is_password_strong
 from CustomHttpException import CustomHttpException
 from CustomHttpException import exception_raiser
 from CustomJWTRequired import jwt_noapi_required
@@ -104,26 +105,31 @@ def profile():
                     "New password must be different from current password",
                     400
                 )
+
+                exception_raiser(not is_password_strong(new_password)[0], 'error', 'New password is too weak.', 400)
                 
                 # Update password
                 user.password = hashlib.sha256(new_password.encode()).hexdigest()
             
             # Validate email format
-            exception_raiser(not is_email_valid(user.email), "error", "Invalid email format", 400)
+            exception_raiser(not is_email_valid(user.email), "error", "Invalid email format.", 400)
             
             # Check if email already exists (excluding current user)
             existing_user = User.query.filter(
                 User.email == user.email, 
                 User.id != user.id
             ).first()
-            exception_raiser(existing_user is not None, "error", "Email already exists", 400)
+            exception_raiser(existing_user is not None, "error", "Email already exists.", 400)
             
             db.session.commit()
-            
-            return render_template('profile.html', 
+            token = create_access_token(identity=user.get_identity(), additional_claims=user.get_additional_claims(), expires_delta=timedelta(days=1))
+            response = make_response(render_template('profile.html', 
                                  user=user, 
                                  message="Profile updated successfully!",
-                                 message_type="success")
+                                 message_type="success"))
+
+            set_access_cookies(response, token)
+            return response
                                  
         except CustomHttpException as e:
             db.session.rollback()
