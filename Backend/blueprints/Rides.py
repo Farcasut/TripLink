@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app, abort
+from flask import Blueprint, request, jsonify, current_app, abort, redirect
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from database import db
 from blueprints.UserRoles import UserRoles
@@ -40,7 +40,7 @@ def create_ride():
     jwt_map = get_jwt()
     user_id = int(get_jwt_identity())
     user_role = jwt_map.get("role")
-    # exception_raiser(user_role != UserRoles.DRIVER.value, "error", "You must be a driver to create a ride.", 403)
+    exception_raiser(user_role != UserRoles.DRIVER.value, "error", "You must be a driver to create a ride.", 403)
     ride: RideOffer = RideOffer(**request.get_json())
     ride.author_id = user_id
     db.session.add(ride)
@@ -64,7 +64,7 @@ def create_ride_form():
         user_role = jwt_map.get("role")
         
         # Redirect non-drivers
-        # exception_raiser(user_role != UserRoles.DRIVER.value, "error", "You must be a driver to access this page.", 403)
+        exception_raiser(user_role != UserRoles.DRIVER.value, "error", "You must be a driver to access this page.", 403)
         
         cities = FetchCities.get_all('romania')
         today = date.today().isoformat()
@@ -72,7 +72,7 @@ def create_ride_form():
         return render_template('rides/create.html', cities=cities, today=today)
         
     except CustomHttpException as e:
-        return jsonify({'status': e.status, "message": str(e)}), e.status_code
+        return redirect('/dashboard')
     except TemplateNotFound:
         abort(404)
     except Exception as e:
