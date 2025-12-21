@@ -13,6 +13,7 @@ import models.RideOffer
 import argparse
 
 from blueprints.userAccess import user_access
+from blueprints.UserProfile import user_profile
 from blueprints.Cities import cities
 from blueprints.Rides import rides
 import FetchCities
@@ -38,6 +39,7 @@ def create_app():
     app.config['JWT_COOKIE_SECURE'] = False
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.register_blueprint(user_access)
+    app.register_blueprint(user_profile)
     app.register_blueprint(cities)
     app.register_blueprint(rides)
     jwt = JWTManager(app)
