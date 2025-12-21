@@ -14,6 +14,7 @@ import FetchCities
 from datetime import date, datetime, time
 from sqlalchemy import and_
 
+
 rides = Blueprint("rides", __name__, url_prefix="/rides")
 
 def get_jwt_user(require_driver: bool = False):
@@ -164,8 +165,9 @@ def search_rides():
 
         raise
 
-from models.Booking import Booking
-from models.enums import BookingStatus
+
+def estimate_trip_cost(distance_km, cost_per_km=0.12, service_fee=2.0):
+    return round(distance_km * cost_per_km + service_fee, 2)
 
 @rides.post("/search")
 @jwt_noapi_required
@@ -214,9 +216,17 @@ def search_rides_results():
             for r in rides_found
         ]
 
+        distance_km = FetchCities.distance(
+            FetchCities.get_location(from_city, 'Romania'),
+            FetchCities.get_location(to_city, 'Romania')
+        )
+
+        estimated_price = estimate_trip_cost(distance_km)
+        
         return render_template(
             "rides/results.html",
             rides=results,
+            estimated_price=estimated_price,
             from_city=from_city,
             to_city=to_city,
             date=search_date,

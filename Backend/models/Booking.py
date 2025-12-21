@@ -14,8 +14,8 @@ class Booking(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    ride_id = db.Column(db.Integer, db.ForeignKey("ride_offer.id"), nullable=False, index=True)
-    passenger_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    ride_id = db.Column(db.Integer, db.ForeignKey("ride_offers.id"), nullable=False, index=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     status = db.Column(db.String(16), nullable=False, default=BookingStatus.PENDING, index=True)
 
     created_at = db.Column(

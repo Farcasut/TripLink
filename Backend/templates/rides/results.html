@@ -74,14 +74,14 @@
                 {% for ride, ride_date, already_booked in rides %}
                 <div class="bg-white shadow rounded-lg p-5 flex flex-col space-y-3 border border-gray-200">
 
-                    <div class="flex items-center justify-between">
-                    <span class="text-gray-700">
-                        <strong>Date:</strong> {{ ride_date }}
-                    </span>
-                    <span class="bg-secondary text-white px-3 py-1 rounded">
-                        {{ ride.price }}€
-                    </span>
-                    </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-700">
+                                    <strong>Date:</strong> {{ ride_date }}
+                                </span>
+                                <span class="bg-secondary text-white px-3 py-1 rounded">
+                                    {{ ride.price }}€
+                                </span>
+                            </div>
 
                     <div class="text-gray-700">
                     <strong>Seats:</strong> {{ ride.available_seats }}
@@ -100,9 +100,10 @@
                     </button>
                     {% endif %}
 
+                        </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
+
             {% else %}
             <p class="text-gray-700 text-lg mt-4">
                 No rides found for your search.

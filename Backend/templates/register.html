@@ -78,12 +78,32 @@
                 });
 
                 const result = await response.json();
-                message.textContent = result.message;
+                message.innerHTML = `
+                    <p>${result.message}</p>
+                `;
+
                 message.classList.remove('hidden');
                 if (result.status == 'success') {
                     message.classList.remove('bg-red-500', 'text-red-100');
                     message.classList.add('bg-green-500', 'text-white');
-                } else {
+                } else if (result.status == 'error') {
+                    if ('content' in result) {
+                        const content = result['content']; 
+                        message.innerHTML += `
+                            <ul>
+                        `;
+
+                        for (let msg of content) {
+                            message.innerHTML += `
+                                <li>${msg}</li>
+                            `;
+                        }
+
+                        message.innerHTML += `
+                            </ul>
+                        `;
+                    }
+
                     message.classList.remove('bg-green-500', 'text-white');
                     message.classList.add('bg-red-500', 'text-red-100');
                 }

@@ -2,7 +2,7 @@ import hashlib
 
 import pytest
 
-from blueprints.UserRoles import UserRoles
+from models.enums import UserRole
 from models.User import User
 from database import db
 
@@ -20,17 +20,17 @@ def test_register_success(client, mock_app):
     data = {
         "username": "testuser",
         "email": "test@example.com",
-        "password": "mypassword",
+        "password": "strongPassword1",
         "first_name": "Test",
         "last_name": "User",
-        "role": UserRoles.DEFAULT.value
+        "role": UserRole.DEFAULT
     }
     response = client.post("/register", json=data)
     assert response.status_code == 201
 
     body = response.get_json()
     assert body["status"] == "success"
-    assert "content" in body  # token included
+    # assert "content" in body # token is not present anymore
 
     with mock_app.app_context():
         user = User.query.filter_by(username="testuser").first()
@@ -38,18 +38,19 @@ def test_register_success(client, mock_app):
         assert user.email == "test@example.com"
         assert user.first_name == "Test"
         assert user.last_name == "User"
-        assert user.role == UserRoles.DEFAULT.value
+        assert user.role == UserRole.DEFAULT
 
 @pytest.mark.order(2)
 def test_register_invalid_email(client):
     data = {
         "username": "bademail",
         "email": "invalidemail",
-        "password": "pw",
+        "password": "strongPassword1",
         "first_name": "Bad",
         "last_name": "Email",
-        "role": UserRoles.DEFAULT.value
+        "role": UserRole.DEFAULT
     }
+
     response = client.post("/register", json=data)
     body = response.get_json()
 
@@ -64,8 +65,8 @@ def test_register_duplicate_user(client, mock_app):
         user: User = User(
             username="duplicate",
             email="dup@example.com",
-            password=hash_pw("pw"),
-            role=UserRoles.DEFAULT.value,
+            password=hash_pw("strongPassword1"),
+            role=UserRole.DEFAULT,
             first_name="Dup",
             last_name="User"
         )
@@ -76,7 +77,7 @@ def test_register_duplicate_user(client, mock_app):
     data = {
         "username": "newuser",
         "email": "dup@example.com",
-        "password": "pw",
+        "password": "strongPassword1",
         "first_name": "New",
         "last_name": "User",
         "role": 1
@@ -85,7 +86,10 @@ def test_register_duplicate_user(client, mock_app):
     body = response.get_json()
 
     assert response.status_code == 400
-    assert "Email already exists" in body["message"]
+    assert 'message' in body
+    assert body['message'] == 'User already exists.'
+    assert 'content' in body
+    assert "Email already exists." in body["content"]
 
 
 # -----------------
@@ -97,15 +101,15 @@ def test_login_success(client, mock_app):
         user: User = User(
             username="loginuser",
             email="login@example.com",
-            password=hash_pw("secret"),
-            role=UserRoles.DEFAULT.value,
+            password=hash_pw("secret"), # FIX: Password validation.
+            role=UserRole.DEFAULT,
             first_name="Login",
             last_name="User"
         )
         db.session.add(user)
         db.session.commit()
 
-    data = {"username": "loginuser", "password": "secret"}
+    data = {"username": "loginuser", "password": "secret"} # FIX: Password validation.
     response = client.post("/login", json=data)
 
     assert response.status_code == 200
@@ -116,8 +120,8 @@ def test_login_wrong_password(client, mock_app):
         user: User = User(
             username="wrongpw",
             email="wrong@example.com",
-            password=hash_pw("rightpassword"),
-            role=UserRoles.DEFAULT.value,
+            password=hash_pw("rightpassword"), # FIX: Password validation.
+            role=UserRole.DEFAULT,
             first_name="Wrong",
             last_name="Password"
         )
