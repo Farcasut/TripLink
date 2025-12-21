@@ -161,6 +161,9 @@ def search_rides():
 
         raise
 
+def estimate_trip_cost(distance_km, cost_per_km=0.12, service_fee=2.0):
+    return round(distance_km * cost_per_km + service_fee, 2)
+
 @rides.post("/search")
 @jwt_noapi_required
 def search_rides_results():
@@ -179,10 +182,16 @@ def search_rides_results():
         ).filter(and_(sod <= RideOffer.departure_date, RideOffer.departure_date <= eod)).all()
 
         ride_dates = [datetime.fromtimestamp(ride.departure_date).strftime('%Y-%m-%d %H:%M') for ride in rides]
+        distance_km = FetchCities.distance(
+            FetchCities.get_location(from_city, 'Romania'),
+            FetchCities.get_location(to_city, 'Romania')
+        )
 
+        estimated_price = estimate_trip_cost(distance_km)
         return render_template(
             "rides/results.html",
             rides = list(zip(rides, ride_dates)),
+            estimated_price = estimated_price,
             from_city = from_city,
             to_city = to_city,
             date = date,
