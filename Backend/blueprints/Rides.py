@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app, abort
+from flask import Blueprint, request, jsonify, current_app, abort, redirect
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from database import db
 from blueprints.UserRoles import UserRoles
@@ -52,6 +52,34 @@ def create_ride():
   except Exception as e:
     db.session.rollback()
     return jsonify({"status": "error", "message": str(e)}), 400
+  
+@rides.get("/create")
+@jwt_noapi_required
+def create_ride_form():
+    """
+    Render the create ride form (driver only).
+    """
+    try:
+        jwt_map = get_jwt()
+        user_role = jwt_map.get("role")
+        
+        # Redirect non-drivers
+        exception_raiser(user_role != UserRoles.DRIVER.value, "error", "You must be a driver to access this page.", 403)
+        
+        cities = FetchCities.get_all('romania')
+        today = date.today().isoformat()
+        
+        return render_template('rides/create.html', cities=cities, today=today)
+        
+    except CustomHttpException as e:
+        return redirect('/dashboard')
+    except TemplateNotFound:
+        abort(404)
+    except Exception as e:
+        if current_app.debug:
+            print(f'create_ride_form: {e}.')
+            breakpoint()
+        raise
 
 @rides.get("/<int:ride_id>")
 @jwt_required(optional=True)
