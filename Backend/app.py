@@ -10,6 +10,7 @@ from blueprints.UserProfile import user_profile
 from blueprints.Cities import cities
 from blueprints.Rides import rides
 from blueprints.Bookings import bookings
+from blueprints.DriverAccess import driver_access
 from blueprints.userAccess import user_access
 import FetchCities
 
@@ -34,6 +35,7 @@ def create_app():
     app.config['JWT_COOKIE_SECURE'] = False
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.register_blueprint(user_access)
+    app.register_blueprint(driver_access)
     app.register_blueprint(cities)
     app.register_blueprint(rides)
     app.register_blueprint(bookings)

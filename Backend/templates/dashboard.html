@@ -67,6 +67,9 @@
                      class="hidden absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg py-2 z-50">
                     <p class="block px-4 py-2 text-gray-600 hover:bg-gray-100">{{username}}</p>
                     <a href="/profile" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Profile</a>
+                    {% if not is_driver %}
+                    <a href="/driver/becomeDriver" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Become Driver</a>
+                    {% endif %}
                     <a href="#" id="logoutBtn"
                        class="block px-4 py-2 text-red-600 hover:bg-gray-100">Logout</a>
                 </div>
