@@ -185,7 +185,7 @@ def search_rides():
         raise
 
 
-def estimate_trip_cost(distance_km, cost_per_km=0.12, service_fee=2.0):
+def estimate_trip_cost(distance_km, cost_per_km=1.12, service_fee=2.0):
     return round(distance_km * cost_per_km + service_fee, 2)
 
 @rides.post("/search")
