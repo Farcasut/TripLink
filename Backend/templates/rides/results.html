@@ -78,9 +78,26 @@
                                 <span class="text-gray-700">
                                     <strong>Date:</strong> {{ ride_date }}
                                 </span>
-                                <span class="bg-secondary text-white px-3 py-1 rounded">
-                                    {{ ride.price }} RON
-                                </span>
+
+                                <div class="flex items-center space-x-2">
+                                    <span class="bg-secondary text-white px-3 py-1 rounded font-semibold">
+                                        {{ ride.price }} RON
+                                    </span>
+
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                        actual
+                                    </span>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    <span class="bg-secondary text-white px-3 py-1 rounded font-semibold">
+                                        {{ estimated_price }} RON
+                                    </span>
+
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                                        estimated
+                                    </span>
+                                </div>
                             </div>
 
                     <div class="text-gray-700">
