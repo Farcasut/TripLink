@@ -6,6 +6,7 @@ from models.RideOffer import RideOffer
 from models.enums import BookingStatus
 from CustomJWTRequired import jwt_noapi_required
 from CustomHttpException import exception_raiser
+from CustomHttpException import CustomHttpException
 from jinja2 import TemplateNotFound
 
 from blueprints.Rides import get_jwt_user, base_context_from_jwt, format_ts
@@ -66,31 +67,35 @@ def my_bookings():
 @bookings.post("/request/<int:ride_id>")
 @jwt_noapi_required
 def request_booking(ride_id):
-    user_id, _jwt_map = get_jwt_user()
+    try:
+        user_id, _jwt_map = get_jwt_user()
 
-    ride = db.session.get(RideOffer, ride_id)
-    exception_raiser(not ride, "error", "Ride not found", 404)
+        ride: RideOffer = db.session.get(RideOffer, ride_id)
+        exception_raiser(not ride, "error", "Ride not found", 404)
+        exception_raiser(ride.available_seats <= 0, "error", "No seats available", 400)
 
-    exception_raiser(
-        Booking.query.filter_by(
+        exception_raiser(
+            Booking.query.filter_by(
+                ride_id=ride.id,
+                passenger_id=user_id
+            ).first(),
+            "error",
+            "Already booked",
+            400
+        )
+
+        booking = Booking(
             ride_id=ride.id,
-            passenger_id=user_id
-        ).first(),
-        "error",
-        "Already booked",
-        400
-    )
+            passenger_id=user_id,
+            status=BookingStatus.PENDING
+        )
 
-    booking = Booking(
-        ride_id=ride.id,
-        passenger_id=user_id,
-        status=BookingStatus.PENDING
-    )
+        db.session.add(booking)
+        db.session.commit()
 
-    db.session.add(booking)
-    db.session.commit()
-
-    return jsonify({"message": "Booking request sent"}), 201
+        return jsonify({"message": "Booking request sent"}), 201
+    except CustomHttpException as e:
+        return jsonify({'status': e.status, "message": str(e)}), e.status_code
 
 
 @bookings.post("/accept/<int:booking_id>")
