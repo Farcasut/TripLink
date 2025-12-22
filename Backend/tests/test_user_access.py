@@ -2,7 +2,7 @@ import hashlib
 
 import pytest
 
-from blueprints.UserRoles import UserRoles
+from models.enums import UserRole
 from models.User import User
 from database import db
 
@@ -23,7 +23,7 @@ def test_register_success(client, mock_app):
         "password": "strongPassword1",
         "first_name": "Test",
         "last_name": "User",
-        "role": UserRoles.DEFAULT.value
+        "role": UserRole.DEFAULT
     }
     response = client.post("/register", json=data)
     assert response.status_code == 201
@@ -38,7 +38,7 @@ def test_register_success(client, mock_app):
         assert user.email == "test@example.com"
         assert user.first_name == "Test"
         assert user.last_name == "User"
-        assert user.role == UserRoles.DEFAULT.value
+        assert user.role == UserRole.DEFAULT
 
 @pytest.mark.order(2)
 def test_register_invalid_email(client):
@@ -48,7 +48,7 @@ def test_register_invalid_email(client):
         "password": "strongPassword1",
         "first_name": "Bad",
         "last_name": "Email",
-        "role": UserRoles.DEFAULT.value
+        "role": UserRole.DEFAULT
     }
 
     response = client.post("/register", json=data)
@@ -66,7 +66,7 @@ def test_register_duplicate_user(client, mock_app):
             username="duplicate",
             email="dup@example.com",
             password=hash_pw("strongPassword1"),
-            role=UserRoles.DEFAULT.value,
+            role=UserRole.DEFAULT,
             first_name="Dup",
             last_name="User"
         )
@@ -102,7 +102,7 @@ def test_login_success(client, mock_app):
             username="loginuser",
             email="login@example.com",
             password=hash_pw("secret"), # FIX: Password validation.
-            role=UserRoles.DEFAULT.value,
+            role=UserRole.DEFAULT,
             first_name="Login",
             last_name="User"
         )
@@ -121,7 +121,7 @@ def test_login_wrong_password(client, mock_app):
             username="wrongpw",
             email="wrong@example.com",
             password=hash_pw("rightpassword"), # FIX: Password validation.
-            role=UserRoles.DEFAULT.value,
+            role=UserRole.DEFAULT,
             first_name="Wrong",
             last_name="Password"
         )

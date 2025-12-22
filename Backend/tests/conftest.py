@@ -3,8 +3,9 @@ import pytest
 from flask import Flask
 from flask_jwt_extended import JWTManager
 
-from blueprints.UserRoles import UserRoles
+from models.enums import UserRole
 from blueprints.userAccess import user_access
+from blueprints.Bookings import bookings
 from blueprints.Rides import rides
 from database import db
 from models.User import User
@@ -20,6 +21,7 @@ def mock_app():
     # Initialize and register everything
     db.init_app(app)
     app.register_blueprint(user_access)
+    app.register_blueprint(bookings)
     app.register_blueprint(rides)
 
     # Create and tear down database per test session
@@ -31,7 +33,7 @@ def mock_app():
                     username="driver",
                     email="driver@example.com",
                     password=hashlib.sha256(b"test").hexdigest(),
-                    role=UserRoles.DRIVER.value,
+                    role=UserRole.DRIVER,
                     first_name="Driver",
                     last_name="User"
                 )
@@ -40,7 +42,7 @@ def mock_app():
             username="passenger",
             email="passenger@example.com",
             password=hashlib.sha256(b"test").hexdigest(),
-            role=UserRoles.DEFAULT.value,
+            role=UserRole.DEFAULT,
             first_name="Passenger",
             last_name="User"
         )

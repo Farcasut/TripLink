@@ -11,7 +11,7 @@ from jinja2 import TemplateNotFound
 import jwt
 import re
 
-from blueprints.UserRoles import UserRoles
+from models.enums import UserRole
 from models.User import User
 from CustomHttpException import CustomHttpException
 from CustomHttpException import exception_raiser
@@ -146,7 +146,7 @@ def register():
             'content': ucont
         }), 400
 
-    user.role = UserRoles.DEFAULT.value
+    user.role = UserRole.DEFAULT
     db.session.add(user)
     db.session.commit()
     return jsonify({"status": "success", "message": "User registered"}), 201
@@ -240,15 +240,16 @@ def user_dashboard():
     '''
 
     jwt_map = get_jwt()
-    
+
     try:
-        first_name = jwt_map.get("first_name")
-        last_name = jwt_map.get("last_name")
-        username = jwt_map.get("username")
-        return render_template('dashboard.html', 
-            first_name = first_name, 
-            last_name = last_name,
-            username = username)
+        return render_template(
+            "dashboard.html",
+            first_name=jwt_map.get("first_name", ""),
+            last_name=jwt_map.get("last_name", ""),
+            username = jwt_map.get("username",""),
+            is_driver=(jwt_map.get("role") == UserRole.DRIVER),
+        )
+
     except TemplateNotFound:
         abort(404)
     except Exception as e:
@@ -257,6 +258,7 @@ def user_dashboard():
             breakpoint()
             
         raise
+    
 
 @user_access.route('/logout')
 @jwt_noapi_required

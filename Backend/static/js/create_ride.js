@@ -140,8 +140,8 @@ form.addEventListener("submit", async (e) => {
             form.reset();
             
             setTimeout(() => {
-                window.location.href = "/rides";
-            }, 1500);
+                window.location.href = "/rides/all_rides";
+            }, 500);
         } else {
             message.classList.remove("bg-green-500", "text-white");
             message.classList.add("bg-red-500", "text-red-100");

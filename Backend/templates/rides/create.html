@@ -31,9 +31,15 @@
         <h1 class="text-2xl font-bold text-center mb-8">Triplink</h1>
 
         <nav>
-            <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700">Dashboard</a>
-            <a href="/rides" class="block py-2.5 px-4 rounded hover:bg-gray-700">Search Rides</a>
-            <a href="/rides/create" class="block py-2.5 px-4 rounded bg-gray-700">Create Ride</a>
+            <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Dashboard </a>
+            {% if is_driver %}
+                <a href="/rides/create" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Create Ride </a>
+                <a href="/rides/all_rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Rides </a>
+                <a href="/bookings/incoming" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Incoming Bookings </a>
+            {% else %}
+                <a href="/rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Search Rides </a>
+                <a href="/bookings/my" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Bookings </a>
+            {% endif %}
         </nav>
     </div>
 
@@ -55,88 +61,125 @@
         </header>
 
         <main class="p-6">
-            <div class="max-w-xl mx-auto bg-white rounded-lg shadow p-6">
 
-                <h3 class="text-lg font-semibold mb-4">Offer a Ride</h3>
+            {% if not is_driver %}
+                <div class="max-w-xl mx-auto bg-white shadow rounded-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-red-600">
+                        Access denied
+                    </h3>
+                    <p class="text-gray-700 mt-2">
+                        You must be a driver to create a ride.
+                    </p>
+                </div>
 
-                <div id="message" class="hidden p-3 mb-4 rounded text-sm"></div>
+            {% else %}
+                <div class="max-w-xl mx-auto bg-white rounded-lg shadow p-6">
 
-                <form id="createRideForm" class="space-y-4">
-                    <div class="relative">
-                        <label class="block text-gray-700 mb-1">Departure City</label>
+                    <h3 class="text-lg font-semibold mb-4">
+                        Offer a Ride
+                    </h3>
 
-                        <input id="fromCityInput" type="text"
-                            name="source"
-                            autocomplete="off"
-                            required
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-secondary/40"
-                            placeholder="Departure City">
+                    <div id="message" class="hidden p-3 mb-4 rounded text-sm"></div>
 
-                        <ul id="fromCityResults"
-                            class="absolute left-0 right-0 bg-white border rounded shadow max-h-40 overflow-y-auto hidden z-20">
-                        </ul>
-                    </div>
+                    <form id="createRideForm" class="space-y-4">
 
-                    <div class="relative">
-                        <label class="block text-gray-700 mb-1">Arrival City</label>
+                        <div class="relative">
+                            <label class="block text-gray-700 mb-1">
+                                Departure City
+                            </label>
 
-                        <input id="toCityInput" type="text"
-                            name="destination"
-                            autocomplete="off"
-                            required
-                            class="w-full px-3 py-2 border rounded focus:ring focus:ring-secondary/40"
-                            placeholder="Arrival City">
+                            <input id="fromCityInput"
+                                   type="text"
+                                   name="source"
+                                   autocomplete="off"
+                                   required
+                                   class="w-full px-3 py-2 border rounded focus:ring focus:ring-secondary/40"
+                                   placeholder="Departure City">
 
-                        <ul id="toCityResults"
-                            class="absolute left-0 right-0 bg-white border rounded shadow max-h-40 overflow-y-auto hidden z-20">
-                        </ul>
-                    </div>
+                            <ul id="fromCityResults"
+                                class="absolute left-0 right-0 bg-white border rounded shadow
+                                       max-h-40 overflow-y-auto hidden z-20">
+                            </ul>
+                        </div>
 
-                    <div>
-                        <label class="block text-gray-700 mb-1">Departure Date</label>
-                        <input type="date"
-                               name="date"
-                               min="{{ today }}"
-                               required
-                               class="w-full px-3 py-2 border rounded focus:ring focus:ring-secondary/40">
-                    </div>
+                        <div class="relative">
+                            <label class="block text-gray-700 mb-1">
+                                Arrival City
+                            </label>
 
-                    <div>
-                        <label class="block text-gray-700 mb-1">Departure Time</label>
-                        <input type="time"
-                               name="time"
-                               required
-                               class="w-full px-3 py-2 border rounded focus:ring focus:ring-secondary/40">
-                    </div>
+                            <input id="toCityInput"
+                                   type="text"
+                                   name="destination"
+                                   autocomplete="off"
+                                   required
+                                   class="w-full px-3 py-2 border rounded focus:ring focus:ring-secondary/40"
+                                   placeholder="Arrival City">
 
-                    <div>
-                        <label class="block text-gray-700 mb-1">Available Seats</label>
-                        <input type="number"
-                               name="available_seats"
-                               min="1"
-                               max="8"
-                               value="3"
-                               required
-                               class="w-full px-3 py-2 border rounded focus:ring focus:ring-secondary/40">
-                    </div>
+                            <ul id="toCityResults"
+                                class="absolute left-0 right-0 bg-white border rounded shadow
+                                       max-h-40 overflow-y-auto hidden z-20">
+                            </ul>
+                        </div>
 
-                    <div>
-                        <label class="block text-gray-700 mb-1">Price per Seat (RON)</label>
-                        <input type="number"
-                               name="price"
-                               min="0"
-                               step="1"
-                               placeholder="50"
-                               required
-                               class="w-full px-3 py-2 border rounded focus:ring focus:ring-secondary/40">
-                    </div>
+                        <div>
+                            <label class="block text-gray-700 mb-1">
+                                Departure Date
+                            </label>
+                            <input type="date"
+                                   name="date"
+                                   min="{{ today }}"
+                                   required
+                                   class="w-full px-3 py-2 border rounded
+                                          focus:ring focus:ring-secondary/40">
+                        </div>
 
-                    <button type="submit"
-                            class="w-full bg-secondary text-white py-2 rounded hover:bg-primary transition">
-                        Create Ride
-                    </button>
-                </form>
-            </div>
+                        <div>
+                            <label class="block text-gray-700 mb-1">
+                                Departure Time
+                            </label>
+                            <input type="time"
+                                   name="time"
+                                   required
+                                   class="w-full px-3 py-2 border rounded
+                                          focus:ring focus:ring-secondary/40">
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-1">
+                                Available Seats
+                            </label>
+                            <input type="number"
+                                   name="available_seats"
+                                   min="1"
+                                   max="8"
+                                   value="3"
+                                   required
+                                   class="w-full px-3 py-2 border rounded
+                                          focus:ring focus:ring-secondary/40">
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-1">
+                                Price per Seat (RON)
+                            </label>
+                            <input type="number"
+                                   name="price"
+                                   min="0"
+                                   step="1"
+                                   placeholder="50"
+                                   required
+                                   class="w-full px-3 py-2 border rounded
+                                          focus:ring focus:ring-secondary/40">
+                        </div>
+
+                        <button type="submit"
+                                class="w-full bg-secondary text-white py-2
+                                       rounded hover:bg-primary transition">
+                            Create Ride
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
         </main>
     </div>
 

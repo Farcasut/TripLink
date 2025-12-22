@@ -31,9 +31,15 @@
         <h1 class="text-2xl font-bold text-center mb-8">Triplink</h1>
 
         <nav>
-            <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700">Dashboard</a>
-            <a href="/rides" class="block py-2.5 px-4 rounded bg-gray-700">Search Rides</a>
-            <a href="#" class="block py-2.5 px-4 rounded hover:bg-gray-700">My Rides</a>
+            <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Dashboard </a>
+            {% if is_driver %}
+                <a href="/rides/create" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Create Ride </a>
+                <a href="/rides/all_rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Rides </a>
+                <a href="/bookings/incoming" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Incoming Bookings </a>
+            {% else %}
+                <a href="/rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Search Rides </a>
+                <a href="/bookings/my" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Bookings </a>
+            {% endif %}
         </nav>
     </div>
 
@@ -61,55 +67,47 @@
                 on <span class="text-secondary">{{ date }}</span>
             </h3>
 
+            <div id="bookingMsg" class="hidden mb-4"></div>
+
             {% if rides %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {% for ride, ride_date in rides %}
-                        <div class="bg-white shadow rounded-lg p-5 flex flex-col space-y-3 border border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {% for ride, ride_date, already_booked in rides %}
+                <div class="bg-white shadow rounded-lg p-5 flex flex-col space-y-3 border border-gray-200">
 
                             <div class="flex items-center justify-between">
                                 <span class="text-gray-700">
                                     <strong>Date:</strong> {{ ride_date }}
                                 </span>
-                                
-                                <div class="flex items-center space-x-2">
-                                    <span class="bg-secondary text-white px-3 py-1 rounded font-semibold">
-                                        {{ ride.price }}€
-                                    </span>
-
-                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                                        actual
-                                    </span>
-                                </div>
-
-                                <div class="flex items-center space-x-2">
-                                    <span class="bg-secondary text-white px-3 py-1 rounded font-semibold">
-                                        {{ estimated_price }}€
-                                    </span>
-
-                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                                        estimated
-                                    </span>
-                                </div>
+                                <span class="bg-secondary text-white px-3 py-1 rounded">
+                                    {{ ride.price }} RON
+                                </span>
                             </div>
 
-                            <div class="text-gray-700">
-                                <strong>Seats:</strong> {{ ride.available_seats }}
-                            </div>
+                    <div class="text-gray-700">
+                    <strong>Seats:</strong> {{ ride.available_seats }}
+                    </div>
 
-                            <form action="#" method="POST">
-                                <button type="submit"
-                                        class="w-full bg-secondary text-white py-2 rounded hover:bg-primary transition">
-                                    Book Ride
-                                </button>
-                            </form>
+                    {% if already_booked %}
+                    <button disabled
+                            class="w-full bg-gray-400 text-white py-2 rounded cursor-not-allowed">
+                        Already booked
+                    </button>
+                    {% else %}
+                    <button
+                        class="book-btn w-full bg-secondary text-white py-2 rounded hover:bg-primary transition"
+                        data-ride-id="{{ ride.id }}">
+                        Book Ride
+                    </button>
+                    {% endif %}
 
                         </div>
-
                     {% endfor %}
                 </div>
 
             {% else %}
-                <p class="text-gray-700 text-lg mt-4">No rides found for your search.</p>
+            <p class="text-gray-700 text-lg mt-4">
+                No rides found for your search.
+            </p>
             {% endif %}
         </main>
     </div>

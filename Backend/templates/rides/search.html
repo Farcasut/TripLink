@@ -31,8 +31,15 @@
         <h1 class="text-2xl font-bold text-center mb-8">Triplink</h1>
 
         <nav>
-            <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700">Dashboard</a>
-            <a href="/rides/create" class="block py-2.5 px-4 rounded hover:bg-gray-700">Create Rides</a>
+            <a href="/dashboard" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Dashboard </a>
+            {% if is_driver %}
+                <a href="/rides/create" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Create Ride </a>
+                <a href="/rides/all_rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Rides </a>
+                <a href="/bookings/incoming" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Incoming Bookings </a>
+            {% else %}
+                <a href="/rides" class="block py-2.5 px-4 rounded hover:bg-gray-700"> Search Rides </a>
+                <a href="/bookings/my" class="block py-2.5 px-4 rounded hover:bg-gray-700"> My Bookings </a>
+            {% endif %}
         </nav>
     </div>
 

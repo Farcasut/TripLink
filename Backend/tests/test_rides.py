@@ -3,20 +3,20 @@ import pytest
 from flask_jwt_extended import create_access_token
 from database import db
 from models.RideOffer import RideOffer
-from blueprints.UserRoles import UserRoles
+from models.enums import UserRole
 
 
 @pytest.fixture
 def driver_token(mock_app):
   with mock_app.app_context():
-    token = create_access_token(identity="1", additional_claims={"id": "1", "role": UserRoles.DRIVER.value})
+    token = create_access_token(identity="1", additional_claims={"id": "1", "role": UserRole.DRIVER})
     return token
 
 
 @pytest.fixture
 def passenger_token(mock_app):
   with mock_app.app_context():
-    token = create_access_token(identity="2", additional_claims={"id": "2", "role": UserRoles.DEFAULT.value})
+    token = create_access_token(identity="2", additional_claims={"id": "2", "role": UserRole.DEFAULT})
     return token
 
 
@@ -82,20 +82,20 @@ def test_book_ride_success(client, driver_token, passenger_token):
 
     # Book ride as passenger
     book_response = client.post(
-        f"/rides/book/{ride_id}",
+        f"/bookings/request/{ride_id}",
         headers={"Authorization": f"Bearer {passenger_token}"}
     )
     data = book_response.get_json()
 
     assert book_response.status_code == 201
-    assert data["status"] == "success"
-    assert "Seat successfully booked" in data["message"]
+    assert "Booking request sent" in data["message"]
 
     # Verify seat count decreased
-    with client.application.app_context():
-        updated_ride = RideOffer.query.get(ride_id)
-        assert updated_ride.available_seats == 1
-        assert len(updated_ride.passengers) == 1
+    # with client.application.app_context():
+    #     updated_ride = RideOffer.query.get(ride_id)
+    #     assert updated_ride.available_seats == 1
+    #     assert len(updated_ride.passengers) == 1
+    # TODO(fix): The driver has to accept your booking for the seats to decrease.
 
 
 def test_book_ride_no_seats_left(client, driver_token, passenger_token):
@@ -117,7 +117,7 @@ def test_book_ride_no_seats_left(client, driver_token, passenger_token):
 
     # Try to book as passenger
     book_response = client.post(
-        f"/rides/book/{ride_id}",
+        f"/bookings/request/{ride_id}",
         headers={"Authorization": f"Bearer {passenger_token}"}
     )
     data = book_response.get_json()
@@ -145,9 +145,9 @@ def test_book_ride_already_booked(client, driver_token, passenger_token):
     ride_id = create_response.get_json()["content"]["id"]
 
     # Book once
-    client.post(f"/rides/book/{ride_id}", headers={"Authorization": f"Bearer {passenger_token}"})
+    client.post(f"/bookings/request/{ride_id}", headers={"Authorization": f"Bearer {passenger_token}"})
     # Try booking again
-    second_book = client.post(f"/rides/book/{ride_id}", headers={"Authorization": f"Bearer {passenger_token}"})
+    second_book = client.post(f"/bookings/request/{ride_id}", headers={"Authorization": f"Bearer {passenger_token}"})
     data = second_book.get_json()
 
     assert second_book.status_code == 400
@@ -156,7 +156,7 @@ def test_book_ride_already_booked(client, driver_token, passenger_token):
 
 
 def test_book_ride_not_found(client, passenger_token):
-    response = client.post("/rides/book/9999", headers={"Authorization": f"Bearer {passenger_token}"})
+    response = client.post("/bookings/request/9999", headers={"Authorization": f"Bearer {passenger_token}"})
     data = response.get_json()
     assert response.status_code == 404
     assert data["status"] == "error"
