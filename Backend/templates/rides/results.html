@@ -71,7 +71,7 @@
 
             {% if rides %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {% for ride, ride_date, already_booked in rides %}
+                {% for ride, ride_date, already_booked, driver_avg_rating, driver_total_reviews in rides %}
                 <div class="bg-white shadow rounded-lg p-5 flex flex-col space-y-3 border border-gray-200">
 
                             <div class="flex items-center justify-between">
@@ -92,6 +92,31 @@
 
                     <div class="text-gray-700">
                     <strong>Seats:</strong> {{ ride.available_seats }}
+                    </div>
+
+                    <div class="text-gray-700 border-t pt-2">
+                        <strong>Driver:</strong> 
+                        <a href="/reviews/user/{{ ride.author_id }}" 
+                           class="text-blue-600 hover:text-blue-800 hover:underline">
+                            {{ ride.author.first_name }} {{ ride.author.last_name }}
+                        </a>
+                        {% if driver_total_reviews > 0 %}
+                            <div class="flex items-center space-x-1 mt-1">
+                                <span class="text-sm font-medium">{{ driver_avg_rating }}</span>
+                                <div class="flex">
+                                    {% for i in range(5) %}
+                                        {% if i < driver_avg_rating|int %}
+                                            <span class="text-yellow-400 text-xs">★</span>
+                                        {% else %}
+                                            <span class="text-gray-300 text-xs">★</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <span class="text-xs text-gray-500">({{ driver_total_reviews }})</span>
+                            </div>
+                        {% else %}
+                            <span class="text-xs text-gray-500 ml-1">No reviews yet</span>
+                        {% endif %}
                     </div>
 
                     {% if already_booked %}

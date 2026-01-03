@@ -7,6 +7,7 @@ from jinja2 import TemplateNotFound
 import re
 
 from models.User import User
+from models.Review import Review
 from blueprints.userAccess import is_password_strong
 from CustomHttpException import CustomHttpException
 from CustomHttpException import exception_raiser
@@ -144,8 +145,21 @@ def profile():
                                  message="An error occurred while updating profile",
                                  message_type="error")
     
+    reviews_list = Review.query.filter_by(reviewed_id=user.id).all()
+    
+    if reviews_list:
+        avg_rating = sum(r.rating for r in reviews_list) / len(reviews_list)
+        total_reviews = len(reviews_list)
+    else:
+        avg_rating = 0
+        total_reviews = 0
+    
     # Show profile form
     try:
-        return render_template('profile.html', user=user)
+        return render_template('profile.html', 
+                             user=user, 
+                             reviews=reviews_list,
+                             avg_rating=round(avg_rating, 2),
+                             total_reviews=total_reviews)
     except TemplateNotFound:
         abort(404)
