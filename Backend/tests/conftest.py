@@ -1,10 +1,14 @@
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import hashlib
 import pytest
 from flask import Flask
-from flask_jwt_extended import JWTManager
-
+from flask_jwt_extended import JWTManager, create_access_token
 from models.enums import UserRole
 from blueprints.userAccess import user_access
+from blueprints.DriverAccess import driver_access
 from blueprints.Bookings import bookings
 from blueprints.Rides import rides
 from database import db
@@ -21,6 +25,7 @@ def mock_app():
     # Initialize and register everything
     db.init_app(app)
     app.register_blueprint(user_access)
+    app.register_blueprint(driver_access)
     app.register_blueprint(bookings)
     app.register_blueprint(rides)
 
@@ -58,3 +63,17 @@ def mock_app():
 def client(mock_app):
     """Provides a test client for making requests."""
     return mock_app.test_client()
+
+@pytest.fixture()
+def user(mock_app):
+    """Return the passenger user from the test DB"""
+    with mock_app.app_context():
+        return User.query.filter_by(username="passenger").first()
+
+@pytest.fixture()
+def auth_headers(mock_app, user):
+    with mock_app.app_context():
+        token = create_access_token(identity=str(user.id))  # ✅ STRING
+        return {
+            "Authorization": f"Bearer {token}"
+        }
