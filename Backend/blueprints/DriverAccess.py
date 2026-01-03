@@ -8,6 +8,7 @@ from models.Driver import Driver
 from models.User import User
 from models.enums import UserRole
 from CustomHttpException import exception_raiser, CustomHttpException
+from sqlalchemy.exc import IntegrityError
 
 driver_access = Blueprint("driver_access", __name__, url_prefix="/driver")
 
@@ -43,18 +44,6 @@ def become_driver():
             exception_raiser(existing_driver is not None, "error", "Already registered as driver", 400)
 
             data = request.get_json()
-            required_fields = [
-                "driver_license_number", "driver_license_expiry_date",
-                "vehicle_brand", "vehicle_model", "vehicle_year",
-                "license_plate_number", "vehicle_color", "number_of_seats",
-                "bank_account_holder_name", "bank_account_number", "bank_name",
-                "payment_method_preference"
-            ]
-
-            # Validate required fields
-            for field in required_fields:
-                exception_raiser(field not in data, "error", f"Missing field: {field}", 400)
-
             # Create driver entry
             new_driver = Driver(user_id=user_id, **data)
             db.session.add(new_driver)
@@ -73,6 +62,9 @@ def become_driver():
         except CustomHttpException as e:
             db.session.rollback()
             return jsonify({'status': e.status, "message": str(e)}), e.status_code
+        except IntegrityError as e:
+            db.session.rollback()
+            return jsonify({"status": "error", "message": "Missing field. Please check the form."}), 400
         except Exception as e:
             db.session.rollback()
             return jsonify({"status": "error", "message": str(e)}), 400
