@@ -56,6 +56,27 @@ def _fetch_location(city, country):
 
     return float(data[0]['lat']), float(data[0]['lon'])
 
+def _fetch_location_with_no_country(city):
+    global GEO_URL
+    params = {
+        'city': city,
+        'format': 'json',
+        'limit': 1
+    }
+
+    headers = {
+        'User-Agent': 'TripLink-Agent'
+    }
+
+    response = requests.get(GEO_URL, params = params, headers = headers)
+    response.raise_for_status()
+    data = response.json()
+
+    if not data:
+        raise ValueError(f'Could not geocode {city}.')
+
+    return float(data[0]['lat']), float(data[0]['lon'])
+
 CENTROID: Final[tuple[float, float]] = (45.943161, 24.96676)
 
 def get_location(city, country) -> tuple[float, float]:
@@ -64,7 +85,7 @@ def get_location(city, country) -> tuple[float, float]:
         return LOCATION_CACHE[city]
 
     try:
-        data = _fetch_location(city, country)
+        data = _fetch_location(city, country) if country is not None else _fetch_location_with_no_country(city)
         LOCATION_CACHE[city] = data
         return data
     except:

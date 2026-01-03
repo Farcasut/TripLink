@@ -12,6 +12,7 @@ from blueprints.Rides import rides
 from blueprints.Bookings import bookings
 from blueprints.DriverAccess import driver_access
 from blueprints.userAccess import user_access
+from blueprints import ChatService
 import FetchCities
 
 load_dotenv()
@@ -40,6 +41,7 @@ def create_app():
     app.register_blueprint(rides)
     app.register_blueprint(bookings)
     app.register_blueprint(user_profile)
+    app.register_blueprint(ChatService.chat_route)
     jwt = JWTManager(app)
     return app
 
@@ -65,4 +67,5 @@ if __name__ == "__main__":
     setup_db(app, args.reset_db)
     print("Registered tables:", db.Model.metadata.tables.keys())
     FetchCities.prefetch('romania')
-    app.run(host=os.getenv("host"), port=int(os.getenv("port")), debug=True)
+    ChatService.preload()
+    app.run(host=os.getenv("host"), port=int(os.getenv("port")), debug=True, use_reloader=False)
