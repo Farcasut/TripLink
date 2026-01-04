@@ -99,6 +99,22 @@
                                   {{ booking.status | capitalize }}
                                 </div>
 
+                                {% if booking.status == 'accepted' %}
+                                    {% if booking.has_reviewed %}
+                                        <div class="text-sm text-green-600">✓ Reviewed</div>
+                                    {% else %}
+                                        <button
+                                          type="button"
+                                          class="review-btn px-4 py-1.5 bg-blue-600 text-white rounded
+                                                 hover:bg-blue-700 transition text-sm"
+                                          data-booking-id="{{ booking.id }}"
+                                          data-driver-id="{{ booking.ride.author_id }}"
+                                          data-driver-name="{{ booking.ride.author.first_name }} {{ booking.ride.author.last_name }}">
+                                          Review Driver
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+
                                 <button
                                   type="button"
                                   class="delete-btn px-4 py-1.5 bg-gray-500 text-white rounded
@@ -140,7 +156,135 @@
 
         overlay.addEventListener("click", closeSidebar);
 
+        // Review modal
+        const reviewModal = document.createElement("div");
+        reviewModal.id = "reviewModal";
+        reviewModal.className = "fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center";
+        reviewModal.innerHTML = `
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 class="text-xl font-semibold mb-4">Review Driver</h3>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Rating (1-5 stars)</label>
+                    <div class="flex space-x-2 mb-2" id="ratingStars">
+                        ${[1,2,3,4,5].map(i => `<button type="button" class="star-btn text-2xl text-gray-300 hover:text-yellow-400" data-rating="${i}">★</button>`).join('')}
+                    </div>
+                    <input type="number" id="ratingInput" min="1" max="5" value="5" class="hidden">
+                    <span id="ratingText" class="text-sm text-gray-600">5 stars</span>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Comment (optional)</label>
+                    <textarea id="reviewComment" class="w-full border rounded p-2" rows="4" placeholder="Share your experience..."></textarea>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="submitReview" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Submit Review</button>
+                    <button id="cancelReview" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(reviewModal);
+
+        let currentBookingId = null;
+        let currentRating = 5;
+
+        // Star rating functionality
+        function setupStarRating() {
+            reviewModal.querySelectorAll(".star-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const rating = parseInt(btn.dataset.rating);
+                    currentRating = rating;
+                    document.getElementById("ratingInput").value = rating;
+                    document.getElementById("ratingText").textContent = `${rating} star${rating > 1 ? 's' : ''}`;
+                    
+                    reviewModal.querySelectorAll(".star-btn").forEach((star, idx) => {
+                        if (idx < rating) {
+                            star.classList.remove("text-gray-300");
+                            star.classList.add("text-yellow-400");
+                        } else {
+                            star.classList.remove("text-yellow-400");
+                            star.classList.add("text-gray-300");
+                        }
+                    });
+                });
+            });
+        }
+        setupStarRating();
+
+        // Show review modal
+        function setupReviewButtons() {
+            document.querySelectorAll(".review-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    currentBookingId = btn.dataset.bookingId;
+                    const driverName = btn.dataset.driverName;
+                    reviewModal.querySelector("h3").textContent = `Review ${driverName}`;
+                    // Reset form
+                    currentRating = 5;
+                    document.getElementById("ratingInput").value = 5;
+                    document.getElementById("ratingText").textContent = "5 stars";
+                    document.getElementById("reviewComment").value = "";
+                    reviewModal.querySelectorAll(".star-btn").forEach((star, idx) => {
+                        if (idx < 5) {
+                            star.classList.remove("text-gray-300");
+                            star.classList.add("text-yellow-400");
+                        } else {
+                            star.classList.remove("text-yellow-400");
+                            star.classList.add("text-gray-300");
+                        }
+                    });
+                    reviewModal.classList.remove("hidden");
+                });
+            });
+        }
+
+        // Submit review
+        document.getElementById("submitReview").addEventListener("click", async () => {
+            if (!currentBookingId) return;
+
+            const rating = currentRating;
+            const comment = document.getElementById("reviewComment").value;
+
+            const res = await fetch("/reviews/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    booking_id: parseInt(currentBookingId),
+                    rating: rating,
+                    comment: comment
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                reviewModal.classList.add("hidden");
+                location.reload();
+            } else {
+                alert(data.message || "Failed to submit review");
+            }
+        });
+
+        // Cancel review
+        document.getElementById("cancelReview").addEventListener("click", () => {
+            reviewModal.classList.add("hidden");
+            currentBookingId = null;
+            document.getElementById("reviewComment").value = "";
+            currentRating = 5;
+            document.getElementById("ratingInput").value = 5;
+            document.getElementById("ratingText").textContent = "5 stars";
+            document.querySelectorAll(".star-btn").forEach((star, idx) => {
+                if (idx < 5) {
+                    star.classList.remove("text-gray-300");
+                    star.classList.add("text-yellow-400");
+                } else {
+                    star.classList.remove("text-yellow-400");
+                    star.classList.add("text-gray-300");
+                }
+            });
+        });
+
         document.addEventListener("DOMContentLoaded", () => {
+            setupReviewButtons();
+            
             document.querySelectorAll(".delete-btn").forEach(btn => {
                 btn.addEventListener("click", async () => {
                     const bookingId = btn.dataset.bookingId;

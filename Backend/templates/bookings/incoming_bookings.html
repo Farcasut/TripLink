@@ -89,9 +89,28 @@
 
                                 <div class="text-sm text-gray-700 font-medium">
                                     Passenger:
-                                    {{ booking.passenger.first_name }}
-                                    {{ booking.passenger.last_name }}
+                                    <a href="/reviews/user/{{ booking.passenger_id }}" 
+                                       class="text-blue-600 hover:text-blue-800 hover:underline">
+                                        {{ booking.passenger.first_name }} {{ booking.passenger.last_name }}
+                                    </a>
                                     (<span class="text-gray-500">@{{ booking.passenger.username }}</span>)
+                                    {% if booking.passenger_total_reviews > 0 %}
+                                        <div class="flex items-center space-x-1 mt-1">
+                                            <span class="text-xs font-medium">{{ booking.passenger_avg_rating }}</span>
+                                            <div class="flex">
+                                                {% for i in range(5) %}
+                                                    {% if i < booking.passenger_avg_rating|int %}
+                                                        <span class="text-yellow-400 text-xs">★</span>
+                                                    {% else %}
+                                                        <span class="text-gray-300 text-xs">★</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <span class="text-xs text-gray-500">({{ booking.passenger_total_reviews }})</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-xs text-gray-500 ml-1">No reviews yet</span>
+                                    {% endif %}
                                 </div>
                             </div>
 

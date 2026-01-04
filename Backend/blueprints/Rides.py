@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from database import db
 from models.enums import UserRole,BookingStatus
 from models.RideOffer import RideOffer
+from models.Review import Review
 from jinja2 import TemplateNotFound
 from CustomHttpException import CustomHttpException
 from CustomHttpException import exception_raiser
@@ -223,14 +224,27 @@ def search_rides_results():
                 ).all()
             }
 
-        results = [
-            (
-                r,
-                datetime.fromtimestamp(r.departure_date).strftime("%Y-%m-%d %H:%M"),
-                r.id in booked_ids
+        # Calculate driver ratings for each ride
+        results = []
+        for r in rides_found:
+            # Get driver's reviews
+            driver_reviews = Review.query.filter_by(reviewed_id=r.author_id).all()
+            if driver_reviews:
+                avg_rating = sum(rev.rating for rev in driver_reviews) / len(driver_reviews)
+                total_reviews = len(driver_reviews)
+            else:
+                avg_rating = 0
+                total_reviews = 0
+            
+            results.append(
+                (
+                    r,
+                    datetime.fromtimestamp(r.departure_date).strftime("%Y-%m-%d %H:%M"),
+                    r.id in booked_ids,
+                    round(avg_rating, 2),
+                    total_reviews
+                )
             )
-            for r in rides_found
-        ]
 
         distance_km = FetchCities.distance(
             FetchCities.get_location(from_city, 'Romania'),

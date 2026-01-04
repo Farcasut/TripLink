@@ -10,6 +10,7 @@ from blueprints.UserProfile import user_profile
 from blueprints.Cities import cities
 from blueprints.Rides import rides
 from blueprints.Bookings import bookings
+from blueprints.Reviews import reviews
 from blueprints.DriverAccess import driver_access
 from blueprints.userAccess import user_access
 from blueprints import ChatService
@@ -40,6 +41,7 @@ def create_app():
     app.register_blueprint(cities)
     app.register_blueprint(rides)
     app.register_blueprint(bookings)
+    app.register_blueprint(reviews)
     app.register_blueprint(user_profile)
     app.register_blueprint(ChatService.chat_route)
     jwt = JWTManager(app)
